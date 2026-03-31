@@ -22,8 +22,8 @@ const int NUM_NEOPIXELS = 4;
 Adafruit_NeoPixel pixels(NUM_NEOPIXELS, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
 
 // Configuración de la red Wi-Fi
-const char *ssid = "hdb";             // Cambia por tu red Wi-Fi
-const char *password = "paraguay900"; // Cambia por tu contraseña
+const char *ssid = "";             // Cambia por tu red Wi-Fi
+const char *password = ""; // Cambia por tu contraseña
 
 // Crear objetos
 WebServer server(80); // Servidor web en puerto 80
