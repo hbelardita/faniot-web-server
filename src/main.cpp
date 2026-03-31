@@ -243,41 +243,55 @@ void manejarSemillas()
   html += "<head>";
   html += "<meta charset='UTF-8'>";
   html += "<meta name='viewport' content='width=device-width, initial-scale=1.0'>";
-  html += "<title>Contador de Semillas</title>";
+  html += "<title>Semillas - Faniot</title>";
+  html += "<link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap' rel='stylesheet'>";
   html += "<style>";
-  html += "body { font-family: 'Arial', sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #f5f5dc, #e8e8d0); }";
-  html += ".container { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); overflow: hidden; }";
-  html += ".header { background: linear-gradient(135deg, #8B4513, #A0522D); color: white; padding: 25px; text-align: center; }";
-  html += ".header h1 { margin: 0; font-size: 2em; }";
-  html += ".content { padding: 40px; text-align: center; }";
-  html += ".counter { font-size: 5em; font-weight: bold; color: #5D4037; margin: 20px 0; }";
-  html += ".btn { background: linear-gradient(135deg, #8B4513, #A0522D); color: white; border: none; padding: 15px 30px; margin: 10px; border-radius: 25px; cursor: pointer; font-size: 18px; }";
-  html += ".btn:hover { transform: translateY(-2px); }";
-  html += ".btn-reset { background: linear-gradient(135deg, #d32f2f, #b71c1c); }";
-  html += ".input-group { margin: 20px 0; }";
-  html += ".input-group input { padding: 12px; font-size: 16px; border: 2px solid #8B4513; border-radius: 10px; width: 100px; text-align: center; }";
-  html += ".input-group label { font-size: 16px; color: #5D4037; margin-right: 10px; }";
-  html += ".back-link { display: block; margin-top: 20px; color: #8B4513; text-decoration: none; }";
+  html += ":root { --primary: #f59e0b; --primary-dark: #d97706; --danger: #ef4444; --danger-dark: #dc2626; --bg: #fefce8; --card: #ffffff; --text: #1e293b; --text-light: #64748b; --shadow: 0 10px 40px -10px rgba(0,0,0,0.1); }";
+  html += "* { box-sizing: border-box; margin: 0; padding: 0; }";
+  html += "body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 20px; }";
+  html += ".container { max-width: 600px; margin: 0 auto; }";
+  html += ".header { text-align: center; margin-bottom: 40px; }";
+  html += ".header h1 { font-size: 2rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 8px; }";
+  html += ".card { background: var(--card); border-radius: 24px; padding: 48px 32px; text-align: center; box-shadow: var(--shadow); }";
+  html += ".counter { font-size: 6rem; font-weight: 700; color: var(--primary); line-height: 1; margin: 24px 0; }";
+  html += ".label { font-size: 1rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: 2px; }";
+  html += ".actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 32px 0; }";
+  html += ".btn { padding: 16px 28px; border: none; border-radius: 14px; font-family: inherit; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }";
+  html += ".btn-inc { background: var(--primary); color: white; }";
+  html += ".btn-inc:hover { background: var(--primary-dark); transform: translateY(-2px); }";
+  html += ".btn-dec { background: #fbbf24; color: white; }";
+  html += ".btn-dec:hover { background: #f59e0b; transform: translateY(-2px); }";
+  html += ".btn-reset { background: var(--danger); color: white; }";
+  html += ".btn-reset:hover { background: var(--danger-dark); transform: translateY(-2px); }";
+  html += ".input-group { display: flex; gap: 12px; justify-content: center; align-items: center; margin: 24px 0; flex-wrap: wrap; }";
+  html += ".input-group input { padding: 14px 18px; font-size: 1rem; border: 2px solid #e2e8f0; border-radius: 12px; width: 120px; text-align: center; font-family: inherit; }";
+  html += ".input-group input:focus { outline: none; border-color: var(--primary); }";
+  html += ".input-group .btn { padding: 14px 24px; }";
+  html += ".back-link { display: block; margin-top: 24px; color: var(--text-light); text-decoration: none; font-weight: 500; }";
+  html += ".back-link:hover { color: var(--primary); }";
+  html += "@media (max-width: 480px) { .counter { font-size: 4rem; } .btn { padding: 14px 20px; font-size: 0.9rem; } }";
   html += "</style>";
+  html += "<script>";
+  html += "setInterval(async () => { try { const r = await fetch('/api'); const d = await r.json(); document.getElementById('counter').textContent = d.semillas; } catch(e) {} }, 2000);";
+  html += "</script>";
   html += "</head>";
   html += "<body>";
   html += "<div class='container'>";
-  html += "<div class='header'><h1>Almacén de Semillas</h1></div>";
-  html += "<div class='content'>";
-  html += "<h2>Contador de Semillas</h2>";
-  html += "<div class='counter'>" + String(contadorSemillas) + "</div>";
-  html += "<button class='btn' onclick='fetch(\"/semillas/inc\").then(()=>location.reload())'>+1 Semilla</button>";
-  html += "<button class='btn' onclick='fetch(\"/semillas/dec\").then(()=>location.reload())'>-1 Semilla</button>";
-  html += "<div class='input-group'>";
-  html += "<label>Cantidad:</label>";
-  html += "<input type='number' id='cantidad' value='10' min='1'> ";
-  html += "<button class='btn' onclick='cant=document.getElementById(\"cantidad\").value; fetch(\"/semillas/add?c=\"+cant).then(()=>location.reload())'>Agregar</button>";
+  html += "<div class='header'><h1>🌱 Almacén de Semillas</h1></div>";
+  html += "<div class='card'>";
+  html += "<div class='label'>Total de Semillas</div>";
+  html += "<div class='counter' id='counter'>" + String(contadorSemillas) + "</div>";
+  html += "<div class='actions'>";
+  html += "<button class='btn btn-inc' onclick='fetch(\"/semillas/inc\").then(()=>location.reload())'>+1 Semilla</button>";
+  html += "<button class='btn btn-dec' onclick='fetch(\"/semillas/dec\").then(()=>location.reload())'>-1 Semilla</button>";
   html += "</div>";
-  html += "<button class='btn btn-reset' onclick='fetch(\"/semillas/reset\").then(()=>location.reload())'>Resetear</button>";
+  html += "<div class='input-group'>";
+  html += "<input type='number' id='cantidad' value='10' min='1'>";
+  html += "<button class='btn btn-inc' onclick='cant=document.getElementById(\"cantidad\").value; fetch(\"/semillas/add?c=\"+cant).then(()=>location.reload())'>Agregar</button>";
+  html += "</div>";
+  html += "<button class='btn btn-reset' onclick='fetch(\"/semillas/reset\").then(()=>location.reload())'>Resetear Todo</button>";
   html += "<a href='/' class='back-link'>← Volver al inicio</a>";
-  html += "</div></div>";
-  html += "</body>";
-  html += "</html>";
+  html += "</div></div></body></html>";
   server.send(200, "text/html", html);
 }
 
@@ -370,7 +384,7 @@ void manejarNoEncontrado()
   server.send(404, "text/plain", mensaje);
 }
 
-// Generar HTML de la página principal (estilo AirLive SmartCube)
+// Generar HTML de la página principal
 String generarPaginaHTML()
 {
   String html = "<!DOCTYPE html>";
@@ -378,103 +392,95 @@ String generarPaginaHTML()
   html += "<head>";
   html += "<meta charset='UTF-8'>";
   html += "<meta name='viewport' content='width=device-width, initial-scale=1.0'>";
-  html += "<title>ESP32 Environmental Monitor</title>";
+  html += "<title>Faniot - Monitor Ambiental</title>";
+  html += "<link href='https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap' rel='stylesheet'>";
   html += "<style>";
-  html += "body { font-family: 'Arial', sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #f0f8f0, #e8f5e8); }";
-  html += ".main-container { max-width: 900px; margin: 0 auto; background: #ffffff; border-radius: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); overflow: hidden; }";
-  html += ".header { background: linear-gradient(135deg, #4CAF50, #45a049); color: white; padding: 25px; text-align: center; }";
-  html += ".header h1 { margin: 0; font-size: 2.2em; font-weight: 300; }";
-  html += ".header p { margin: 10px 0 0 0; opacity: 0.9; font-size: 1.1em; }";
-  html += ".content { padding: 40px; }";
-  html += ".display-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 30px; margin-bottom: 30px; }";
-  html += ".sensor-display { background: linear-gradient(135deg, #c8e6c9, #a5d6a7); border: 3px solid #4CAF50; border-radius: 20px; padding: 30px; text-align: center; position: relative; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3); }";
-  html += ".sensor-display.semillas { background: linear-gradient(135deg, #ffe0b2, #ffcc80); border: 3px solid #ff9800; }";
-  html += ".sensor-display.semillas .sensor-icon { background: #fff3e0; }";
-  html += ".sensor-display.semillas .sensor-label { color: #e65100; }";
-  html += ".sensor-display.semillas .sensor-value { color: #bf360c; }";
-  html += ".sensor-display.semillas .sensor-unit { color: #f57c00; }";
-  html += ".sensor-icon { width: 60px; height: 60px; margin: 0 auto 15px; background: #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }";
-  html += ".sensor-label { font-size: 1.3em; color: #2e7d32; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }";
-  html += ".sensor-value { font-size: 3.5em; font-weight: bold; color: #1b5e20; margin: 15px 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); }";
-  html += ".sensor-unit { font-size: 0.7em; color: #388e3c; vertical-align: top; margin-left: 5px; }";
-  html += ".status-indicator { position: absolute; top: 15px; right: 15px; width: 12px; height: 12px; background: #4CAF50; border-radius: 50%; animation: pulse 2s infinite; }";
-  html += "@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }";
-  html += ".controls { text-align: center; margin: 30px 0; }";
-  html += ".btn { background: linear-gradient(135deg, #4CAF50, #45a049); color: white; border: none; padding: 15px 25px; margin: 0 10px; border-radius: 25px; cursor: pointer; font-size: 16px; font-weight: 500; transition: all 0.3s; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3); }";
-  html += ".btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4); }";
-  html += ".system-info { background: linear-gradient(135deg, #f1f8e9, #e8f5e8); border: 2px solid #c8e6c9; border-radius: 15px; padding: 25px; margin-top: 30px; }";
-  html += ".system-info h3 { color: #2e7d32; margin-top: 0; font-size: 1.4em; }";
-  html += ".info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }";
-  html += ".info-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #c8e6c9; }";
-  html += ".info-label { color: #388e3c; font-weight: 500; }";
-  html += ".info-value { color: #1b5e20; font-weight: bold; }";
-  html += "@media (max-width: 768px) { .display-grid, .info-grid { grid-template-columns: 1fr; } .sensor-display { padding: 20px; } .sensor-value { font-size: 2.8em; } }";
+  html += ":root { --primary: #10b981; --primary-dark: #059669; --secondary: #6366f1; --accent: #f59e0b; --danger: #ef4444; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --text-light: #64748b; --shadow: 0 10px 40px -10px rgba(0,0,0,0.1); }";
+  html += "* { box-sizing: border-box; margin: 0; padding: 0; }";
+  html += "body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 20px; }";
+  html += ".container { max-width: 1000px; margin: 0 auto; }";
+  html += ".header { text-align: center; margin-bottom: 40px; }";
+  html += ".header h1 { font-size: 2.5rem; font-weight: 700; color: var(--primary); margin-bottom: 8px; letter-spacing: -1px; }";
+  html += ".header p { color: var(--text-light); font-size: 1.1rem; }";
+  html += ".status-badge { display: inline-flex; align-items: center; gap: 8px; background: #d1fae5; color: var(--primary-dark); padding: 8px 16px; border-radius: 20px; font-size: 0.875rem; font-weight: 600; margin-top: 16px; }";
+  html += ".status-dot { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; animation: pulse 2s infinite; }";
+  html += "@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.2); } }";
+  html += ".grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }";
+  html += ".card { background: var(--card); border-radius: 20px; padding: 32px 24px; text-align: center; position: relative; overflow: hidden; box-shadow: var(--shadow); transition: transform 0.3s ease, box-shadow 0.3s ease; }";
+  html += ".card:hover { transform: translateY(-4px); box-shadow: 0 20px 50px -10px rgba(0,0,0,0.15); }";
+  html += ".card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }";
+  html += ".card.temp::before { background: linear-gradient(90deg, #3b82f6, #06b6d4); }";
+  html += ".card.hum::before { background: linear-gradient(90deg, #06b6d4, #10b981); }";
+  html += ".card.seed::before { background: linear-gradient(90deg, #f59e0b, #ef4444); }";
+  html += ".card-icon { width: 72px; height: 72px; margin: 0 auto 20px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 32px; }";
+  html += ".card.temp .card-icon { background: linear-gradient(135deg, #dbeafe, #e0f2fe); }";
+  html += ".card.hum .card-icon { background: linear-gradient(135deg, #e0f2fe, #d1fae5); }";
+  html += ".card.seed .card-icon { background: linear-gradient(135deg, #fef3c7, #fee2e2); }";
+  html += ".card-label { font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light); margin-bottom: 12px; }";
+  html += ".card-value { font-size: 3rem; font-weight: 700; line-height: 1; }";
+  html += ".card.temp .card-value { color: #0891b2; }";
+  html += ".card.hum .card-value { color: var(--primary); }";
+  html += ".card.seed .card-value { color: var(--accent); }";
+  html += ".card-unit { font-size: 1rem; font-weight: 500; color: var(--text-light); margin-left: 4px; }";
+  html += ".card-bar { height: 6px; background: #e2e8f0; border-radius: 3px; margin-top: 20px; overflow: hidden; }";
+  html += ".card-bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }";
+  html += ".card.temp .card-bar-fill { background: linear-gradient(90deg, #3b82f6, #06b6d4); }";
+  html += ".card.hum .card-bar-fill { background: linear-gradient(90deg, #06b6d4, #10b981); }";
+  html += ".card.seed .card-bar-fill { background: linear-gradient(90deg, #f59e0b, #ef4444); width: 30%; }";
+  html += ".actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }";
+  html += ".btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 24px; border: none; border-radius: 12px; font-family: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; text-decoration: none; }";
+  html += ".btn-primary { background: var(--primary); color: white; }";
+  html += ".btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); }";
+  html += ".btn-secondary { background: white; color: var(--text); border: 2px solid #e2e8f0; }";
+  html += ".btn-secondary:hover { border-color: var(--primary); color: var(--primary); }";
+  html += ".info-panel { background: var(--card); border-radius: 20px; padding: 28px; box-shadow: var(--shadow); }";
+  html += ".info-panel h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }";
+  html += ".info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }";
+  html += ".info-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f1f5f9; }";
+  html += ".info-item:last-child { border-bottom: none; }";
+  html += ".info-label { color: var(--text-light); font-size: 0.9rem; }";
+  html += ".info-value { font-weight: 600; color: var(--text); }";
+  html += "@media (max-width: 768px) { .grid { grid-template-columns: 1fr; } .header h1 { font-size: 1.8rem; } .card-value { font-size: 2.5rem; } .info-grid { grid-template-columns: 1fr; } }";
   html += "</style>";
   html += "<script>";
-  html += "setInterval(function(){ location.reload(); }, 30000);"; // Auto-refresh cada 30 segundos
+  html += "setInterval(function(){ location.reload(); }, 30000);";
+  html += "setInterval(async () => {";
+  html += "  try { const r = await fetch('/api'); const d = await r.json();";
+  html += "    document.getElementById('temp').textContent = d.temperatura.toFixed(1);";
+  html += "    document.getElementById('hum').textContent = d.humedad.toFixed(1);";
+  html += "    document.getElementById('seeds').textContent = d.semillas;";
+  html += "  } catch(e) {} }, 2000);";
   html += "</script>";
   html += "</head>";
   html += "<body>";
-
-  html += "<div class='main-container'>";
+  html += "<div class='container'>";
   html += "<div class='header'>";
-  html += "<h1>Environmental Monitor</h1>";
-  html += "<p>ESP32 + HTU21DF Sensor Station</p>";
+  html += "<h1>Faniot</h1>";
+  html += "<p>Monitor Ambiental ESP32</p>";
+  html += "<div class='status-badge'><span class='status-dot'></span> Sistema Activo</div>";
   html += "</div>";
-
-  html += "<div class='content'>";
-  html += "<div class='display-grid'>";
-
-  // Display de Temperatura (estilo AirLive)
-  html += "<div class='sensor-display'>";
-  html += "<div class='status-indicator'></div>";
-  html += "<div class='sensor-icon'>🌡️</div>";
-  html += "<div class='sensor-label'>Temperatura</div>";
-  html += "<div class='sensor-value'>" + String(temperatura, 1) + "<span class='sensor-unit'>°C</span></div>";
+  html += "<div class='grid'>";
+  int tempBar = constrain(temperatura * 2.5, 0, 100);
+  int humBar = constrain(humedad, 0, 100);
+  html += "<div class='card temp'><div class='card-icon'>🌡️</div><div class='card-label'>Temperatura</div><div class='card-value'><span id='temp'>" + String(temperatura, 1) + "</span><span class='card-unit'>°C</span></div><div class='card-bar'><div class='card-bar-fill' style='width:" + String(tempBar) + "%'></div></div></div>";
+  html += "<div class='card hum'><div class='card-icon'>💧</div><div class='card-label'>Humedad</div><div class='card-value'><span id='hum'>" + String(humedad, 1) + "</span><span class='card-unit'>%</span></div><div class='card-bar'><div class='card-bar-fill' style='width:" + String(humBar) + "%'></div></div></div>";
+  html += "<div class='card seed'><div class='card-icon'>🌱</div><div class='card-label'>Semillas</div><div class='card-value'><span id='seeds'>" + String(contadorSemillas) + "</span><span class='card-unit'>ud</span></div><div class='card-bar'><div class='card-bar-fill'></div></div></div>";
   html += "</div>";
-
-  // Display de Humedad (estilo AirLive)
-  html += "<div class='sensor-display'>";
-  html += "<div class='status-indicator'></div>";
-  html += "<div class='sensor-icon'>💧</div>";
-  html += "<div class='sensor-label'>Humedad</div>";
-  html += "<div class='sensor-value'>" + String(humedad, 1) + "<span class='sensor-unit'>%</span></div>";
+  html += "<div class='actions'>";
+  html += "<button class='btn btn-primary' onclick='location.reload()'>🔄 Actualizar</button>";
+  html += "<button class='btn btn-secondary' onclick=\"window.open('/semillas','_blank')\">🌱 Semillas</button>";
+  html += "<button class='btn btn-secondary' onclick=\"window.open('/datos','_blank')\">📊 Datos</button>";
+  html += "<button class='btn btn-secondary' onclick=\"window.open('/api','_blank')\">📡 API</button>";
   html += "</div>";
-
-  // Display de Semillas
-  html += "<div class='sensor-display semillas'>";
-  html += "<div class='status-indicator'></div>";
-  html += "<div class='sensor-icon'>🌱</div>";
-  html += "<div class='sensor-label'>Semillas</div>";
-  html += "<div class='sensor-value'>" + String(contadorSemillas) + "<span class='sensor-unit'>ud</span></div>";
-  html += "</div>";
-
-  html += "</div>";
-
-  // Controles
-  html += "<div class='controls'>";
-  html += "<button class='btn' onclick='location.reload()'>🔄 Actualizar</button>";
-  html += "<button class='btn' onclick='window.open(\"/semillas\", \"_blank\")'>🌱 Semillas</button>";
-  html += "<button class='btn' onclick='window.open(\"/datos\", \"_blank\")'>📊 Tiempo Real</button>";
-  html += "<button class='btn' onclick='window.open(\"/api\", \"_blank\")'>📡 API</button>";
-  html += "</div>";
-
-  // Información del sistema
-  html += "<div class='system-info'>";
+  html += "<div class='info-panel'>";
   html += "<h3>📋 Información del Sistema</h3>";
   html += "<div class='info-grid'>";
-  html += "<div class='info-item'><span class='info-label'>Dirección IP:</span><span class='info-value'>" + WiFi.localIP().toString() + "</span></div>";
-  html += "<div class='info-item'><span class='info-label'>Red Wi-Fi:</span><span class='info-value'>" + String(ssid) + "</span></div>";
-  html += "<div class='info-item'><span class='info-label'>Tiempo Activo:</span><span class='info-value'>" + String(millis() / 1000) + " seg</span></div>";
-  html += "<div class='info-item'><span class='info-label'>Última Lectura:</span><span class='info-value'>" + String(ultimaLectura / 1000) + " seg</span></div>";
-  html += "</div>";
-  html += "</div>";
-
-  html += "</div>";
-  html += "</div>";
-  html += "</body>";
-  html += "</html>";
-
+  html += "<div class='info-item'><span class='info-label'>Dirección IP</span><span class='info-value'>" + WiFi.localIP().toString() + "</span></div>";
+  html += "<div class='info-item'><span class='info-label'>Red Wi-Fi</span><span class='info-value'>" + String(ssid) + "</span></div>";
+  html += "<div class='info-item'><span class='info-label'>Tiempo Activo</span><span class='info-value'>" + String(millis() / 1000) + " seg</span></div>";
+  html += "<div class='info-item'><span class='info-label'>Última Lectura</span><span class='info-value'>" + String(ultimaLectura / 1000) + " seg</span></div>";
+  html += "</div></div>";
+  html += "</div></body></html>";
   return html;
 }
 
@@ -486,34 +492,61 @@ String generarPaginaDatos()
   html += "<head>";
   html += "<meta charset='UTF-8'>";
   html += "<meta name='viewport' content='width=device-width, initial-scale=1.0'>";
-  html += "<title>Datos en Tiempo Real - HTU21DF</title>";
-  html += "<meta http-equiv='refresh' content='3'>";
+  html += "<title>Datos en Tiempo Real - Faniot</title>";
+  html += "<link href='https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap' rel='stylesheet'>";
   html += "<style>";
-  html += "body { font-family: 'Courier New', monospace; margin: 0; padding: 20px; background: #1a1a1a; color: #00ff00; }";
-  html += ".terminal { background: #000; padding: 20px; border-radius: 5px; border: 2px solid #00ff00; }";
-  html += ".data-line { margin: 10px 0; font-size: 18px; }";
-  html += ".timestamp { color: #ffff00; }";
-  html += ".value { color: #00ffff; font-weight: bold; }";
+  html += ":root { --bg: #0f172a; --card: #1e293b; --accent: #22d3ee; --success: #4ade80; --warning: #fbbf24; --text: #e2e8f0; --text-dim: #94a3b8; }";
+  html += "* { box-sizing: border-box; margin: 0; padding: 0; }";
+  html += "body { font-family: 'JetBrains Mono', monospace; background: var(--bg); color: var(--text); min-height: 100vh; padding: 20px; }";
+  html += ".container { max-width: 800px; margin: 0 auto; }";
+  html += ".header { text-align: center; margin-bottom: 32px; }";
+  html += ".header h1 { font-size: 1.8rem; color: var(--accent); margin-bottom: 8px; letter-spacing: 2px; }";
+  html += ".header p { color: var(--text-dim); font-size: 0.9rem; }";
+  html += ".terminal { background: var(--card); border-radius: 16px; padding: 24px; border: 1px solid #334155; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }";
+  html += ".title-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #334155; }";
+  html += ".dot { width: 12px; height: 12px; border-radius: 50%; }";
+  html += ".dot.red { background: #ef4444; }";
+  html += ".dot.yellow { background: #fbbf24; }";
+  html += ".dot.green { background: #4ade80; }";
+  html += ".data-line { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #334155; font-size: 1rem; }";
+  html += ".data-line:last-of-type { border-bottom: none; }";
+  html += ".data-label { color: var(--text-dim); }";
+  html += ".data-value { color: var(--accent); font-weight: 600; }";
+  html += ".data-value.temp { color: #38bdf8; }";
+  html += ".data-value.hum { color: var(--success); }";
+  html += ".data-value.seed { color: var(--warning); }";
+  html += ".divider { height: 1px; background: #334155; margin: 16px 0; }";
+  html += ".footer { text-align: center; margin-top: 24px; }";
+  html += ".footer a { color: var(--accent); text-decoration: none; font-size: 0.9rem; }";
+  html += ".footer a:hover { text-decoration: underline; }";
+  html += "@media (max-width: 600px) { .data-line { flex-direction: column; gap: 4px; } }";
   html += "</style>";
+  html += "<script>";
+  html += "setInterval(async () => {";
+  html += "  try { const r = await fetch('/api'); const d = await r.json();";
+  html += "    document.getElementById('time').textContent = Math.floor(d.timestamp/1000) + ' seg';";
+  html += "    document.getElementById('temp').textContent = d.temperatura.toFixed(2) + ' °C';";
+  html += "    document.getElementById('hum').textContent = d.humedad.toFixed(2) + ' %';";
+  html += "    document.getElementById('seeds').textContent = d.semillas;";
+  html += "  } catch(e) {}";
+  html += "}, 3000);";
+  html += "</script>";
   html += "</head>";
   html += "<body>";
-
+  html += "<div class='container'>";
+  html += "<div class='header'><h1>═══ FANIOT MONITOR ═══</h1><p>Datos en tiempo real • Actualización cada 3s</p></div>";
   html += "<div class='terminal'>";
-  html += "<h2>═══ MONITOR HTU21DF - TIEMPO REAL ═══</h2>";
-  html += "<div class='data-line'>Actualización automática cada 3 segundos...</div>";
-  html += "<div class='data-line'>═══════════════════════════════════════</div>";
-  html += "<div class='data-line'>Timestamp: <span class='timestamp'>" + String(millis() / 1000) + " seg</span></div>";
-  html += "<div class='data-line'>Temperatura: <span class='value'>" + String(temperatura, 2) + " °C</span></div>";
-  html += "<div class='data-line'>Humedad: <span class='value'>" + String(humedad, 2) + " %</span></div>";
-  html += "<div class='data-line'>IP ESP32: <span class='value'>" + WiFi.localIP().toString() + "</span></div>";
-  html += "<div class='data-line'>Red Wi-Fi: <span class='value'>" + String(ssid) + "</span></div>";
-  html += "<div class='data-line'>═══════════════════════════════════════</div>";
-  html += "<div class='data-line'><a href='/' style='color: #00ff00;'>← Volver al inicio</a></div>";
-  html += "</div>";
-
-  html += "</body>";
-  html += "</html>";
-
+  html += "<div class='title-bar'><span class='dot red'></span><span class='dot yellow'></span><span class='dot green'></span></div>";
+  html += "<div class='data-line'><span class='data-label'>Timestamp:</span><span class='data-value' id='time'>" + String(millis()/1000) + " seg</span></div>";
+  html += "<div class='divider'></div>";
+  html += "<div class='data-line'><span class='data-label'>Temperatura:</span><span class='data-value temp' id='temp'>" + String(temperatura, 2) + " °C</span></div>";
+  html += "<div class='data-line'><span class='data-label'>Humedad:</span><span class='data-value hum' id='hum'>" + String(humedad, 2) + " %</span></div>";
+  html += "<div class='data-line'><span class='data-label'>Contador Semillas:</span><span class='data-value seed' id='seeds'>" + String(contadorSemillas) + "</span></div>";
+  html += "<div class='divider'></div>";
+  html += "<div class='data-line'><span class='data-label'>IP ESP32:</span><span class='data-value'>" + WiFi.localIP().toString() + "</span></div>";
+  html += "<div class='data-line'><span class='data-label'>Red Wi-Fi:</span><span class='data-value'>" + String(ssid) + "</span></div>";
+  html += "<div class='footer'><a href='/'>← Volver al inicio</a></div>";
+  html += "</div></div></body></html>";
   return html;
 }
 
