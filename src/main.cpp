@@ -61,6 +61,10 @@ void manejarNoEncontrado();
 String generarPaginaHTML();
 String generarPaginaDatos();
 void manejarSemillas();
+void manejarSemillasInc();
+void manejarSemillasDec();
+void manejarSemillasReset();
+void manejarSemillasAdd();
 void actualizarContador(int delta);
 void guardarContadorEEPROM();
 void cargarContadorEEPROM();
@@ -142,30 +146,10 @@ void setup()
   server.on("/datos", manejarDatos);
   server.on("/api", manejarAPI);
   server.on("/semillas", manejarSemillas);
-  server.on("/semillas/inc", []()
-            {
-    actualizarContador(1);
-    server.send(200, "text/plain", "OK"); });
-  server.on("/semillas/dec", []()
-            {
-    actualizarContador(-1);
-    server.send(200, "text/plain", "OK"); });
-  server.on("/semillas/reset", []()
-            {
-    actualizarContador(-contadorSemillas);
-    server.send(200, "text/plain", "OK"); });
-  server.on("/semillas/add", []()
-            {
-    if (server.hasArg("c"))
-    {
-      int cantidad = server.arg("c").toInt();
-      if (cantidad > 0)
-      {
-        actualizarContador(cantidad);
-        sonarBuzzer(1);
-      }
-    }
-    server.send(200, "text/plain", "OK"); });
+  server.on("/semillas/inc", manejarSemillasInc);
+  server.on("/semillas/dec", manejarSemillasDec);
+  server.on("/semillas/reset", manejarSemillasReset);
+  server.on("/semillas/add", manejarSemillasAdd);
   server.onNotFound(manejarNoEncontrado);
 
   // Iniciar servidor
@@ -295,6 +279,38 @@ void manejarSemillas()
   html += "</body>";
   html += "</html>";
   server.send(200, "text/html", html);
+}
+
+void manejarSemillasInc()
+{
+  actualizarContador(1);
+  server.send(200, "text/plain", "OK");
+}
+
+void manejarSemillasDec()
+{
+  actualizarContador(-1);
+  server.send(200, "text/plain", "OK");
+}
+
+void manejarSemillasReset()
+{
+  actualizarContador(-contadorSemillas);
+  server.send(200, "text/plain", "OK");
+}
+
+void manejarSemillasAdd()
+{
+  if (server.hasArg("c"))
+  {
+    int cantidad = server.arg("c").toInt();
+    if (cantidad > 0)
+    {
+      actualizarContador(cantidad);
+      sonarBuzzer(1);
+    }
+  }
+  server.send(200, "text/plain", "OK");
 }
 
 // Función para leer el sensor HTU21DF
