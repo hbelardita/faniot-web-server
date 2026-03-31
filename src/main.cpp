@@ -5,6 +5,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include "Adafruit_HTU21DF.h"
+#include <Adafruit_NeoPixel.h>
 
 // Configuración OLED
 #define SCREEN_WIDTH 128
@@ -14,6 +15,11 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // Configuración del buzzer
 const int PIN_BUZZER = 12;
+
+// Configuración NeoPixels
+const int PIN_NEOPIXEL = 27;
+const int NUM_NEOPIXELS = 4;
+Adafruit_NeoPixel pixels(NUM_NEOPIXELS, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
 
 // Configuración de la red Wi-Fi
 const char *ssid = "hdb";             // Cambia por tu red Wi-Fi
@@ -33,6 +39,10 @@ float temperatura = 0.0;
 float humedad = 0.0;
 unsigned long ultimaLectura = 0;
 const long intervaloLectura = 2000;
+
+// Timing para animación NeoPixel
+unsigned long ultimaActualizacionLED = 0;
+const long intervaloLED = 50;
 
 // Contador de semillas
 int contadorSemillas = 0;
@@ -56,6 +66,7 @@ void guardarContadorEEPROM();
 void cargarContadorEEPROM();
 void actualizarOLED();
 void sonarBuzzer(int tipo);
+void actualizarNeoPixels();
 
 void setup()
 {
@@ -98,6 +109,13 @@ void setup()
   // Inicializar buzzer
   pinMode(PIN_BUZZER, OUTPUT);
   digitalWrite(PIN_BUZZER, LOW);
+
+  // Inicializar NeoPixels
+  pixels.begin();
+  pixels.setBrightness(80);
+  pixels.clear();
+  pixels.show();
+  Serial.println("NeoPixels inicializados (4 LEDs en GPIO27)");
 
   // Inicializar OLED
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
@@ -201,6 +219,13 @@ void loop()
     ultimaLectura = tiempoActual;
     leerSensor();
     actualizarOLED();
+  }
+
+  // Actualizar NeoPixels (frecuente para animación suave)
+  if (tiempoActual - ultimaActualizacionLED >= intervaloLED)
+  {
+    ultimaActualizacionLED = tiempoActual;
+    actualizarNeoPixels();
   }
 }
 
@@ -524,4 +549,75 @@ void sonarBuzzer(int tipo)
   {
     tone(PIN_BUZZER, 1000, 500);
   }
+}
+
+// Indicador ambiental con NeoPixels
+// ┌─────────────────┬────────────────────────┬───────────────┐
+// │  Rango Temp     │  Color                 │  RGB          │
+// ├─────────────────┼────────────────────────┼───────────────┤
+// │  < 15°C         │  🔵 Azul puro          │  (0, 0, 255)  │
+// │  15°C - 20°C    │  🔵→🟢 Azul a Verde    │  transición   │
+// │  20°C - 25°C    │  🟢 Verde puro (ideal) │  (0, 255, 0)  │
+// │  25°C - 30°C    │  🟢→🔴 Verde a Rojo    │  transición   │
+// │  > 30°C         │  🔴 Rojo puro          │  (255, 0, 0)  │
+// └─────────────────┴────────────────────────┴───────────────┘
+// Brillo: proporcional a la humedad (30%-100%)
+// Animación: efecto respiración sinusoidal ~3s por ciclo
+void actualizarNeoPixels()
+{
+  uint8_t r = 0, g = 0, b = 0;
+
+  // Mapear temperatura a color con transiciones suaves
+  if (temperatura < 15.0)
+  {
+    // Frío: azul puro
+    r = 0; g = 0; b = 255;
+  }
+  else if (temperatura < 20.0)
+  {
+    // Azul → Verde (transición)
+    float t = (temperatura - 15.0) / 5.0;
+    r = 0;
+    g = (uint8_t)(255 * t);
+    b = (uint8_t)(255 * (1.0 - t));
+  }
+  else if (temperatura < 25.0)
+  {
+    // Ideal: verde puro
+    r = 0; g = 255; b = 0;
+  }
+  else if (temperatura < 30.0)
+  {
+    // Verde → Rojo (pasando por amarillo)
+    float t = (temperatura - 25.0) / 5.0;
+    r = (uint8_t)(255 * t);
+    g = (uint8_t)(255 * (1.0 - t));
+    b = 0;
+  }
+  else
+  {
+    // Caliente: rojo puro
+    r = 255; g = 0; b = 0;
+  }
+
+  // Efecto respiración: onda sinusoidal (~3 segundos por ciclo)
+  float breathPhase = (sin(millis() / 1500.0 * PI) + 1.0) / 2.0;
+
+  // Brillo base según humedad (30% en seco, 100% en húmedo)
+  float humClamped = constrain(humedad, 0.0f, 100.0f);
+  float humBrightness = 0.3 + 0.7 * (humClamped / 100.0);
+
+  // Combinar: respiración modula entre 60% y 100% del brillo por humedad
+  float finalBrightness = humBrightness * (0.6 + 0.4 * breathPhase);
+
+  // Aplicar brillo final a cada componente
+  uint8_t finalR = (uint8_t)(r * finalBrightness);
+  uint8_t finalG = (uint8_t)(g * finalBrightness);
+  uint8_t finalB = (uint8_t)(b * finalBrightness);
+
+  for (int i = 0; i < NUM_NEOPIXELS; i++)
+  {
+    pixels.setPixelColor(i, pixels.Color(finalR, finalG, finalB));
+  }
+  pixels.show();
 }
