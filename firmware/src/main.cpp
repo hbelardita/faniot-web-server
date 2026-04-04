@@ -33,7 +33,6 @@ Adafruit_NeoPixel pixels(NUM_NEOPIXELS, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
 const char *ssid = WIFI_SSID;
 const char *password = WIFI_PASSWORD;
 
-
 // Crear objetos
 Adafruit_HTU21DF htu = Adafruit_HTU21DF();
 
@@ -50,7 +49,11 @@ const long intervaloLectura = 2000;
 
 // Timing para reporte a Supabase
 unsigned long ultimoReporteSupabase = 0;
-const long intervaloReporte = 30000; // Reportar cada 30 segundos (periódico)
+const long intervaloReporte = 30000; 
+
+// Timing para escucha de comandos (Polling)
+unsigned long ultimaEscuchaComandos = 0;
+const long intervaloEscucha = 5000; // Revisar comandos cada 5 segundos
 
 // Timing para animación NeoPixel
 unsigned long ultimaActualizacionLED = 0;
@@ -74,77 +77,52 @@ void actualizarOLED();
 void sonarBuzzer(int tipo);
 void actualizarNeoPixels();
 void enviarDatosSupabase();
+void recibirComandosSupabase();
 
 void setup()
 {
   Serial.begin(115200);
   delay(1000);
 
-  Serial.println("=== Faniot: Cliente Supabase Cloud ===");
+  Serial.println("=== Faniot: IoT Bidireccional ===");
 
-  // Inicializar el sensor HTU21DF
-  if (!htu.begin())
-  {
+  if (!htu.begin()) {
     Serial.println("Error: HTU21DF no encontrado!");
-    while (1)
-    {
-      delay(1000);
-    }
+    while (1) delay(1000);
   }
-  Serial.println("Sensor HTU21DF inicializado correctamente");
 
-  // Conectar a Wi-Fi
   WiFi.begin(ssid, password);
   Serial.print("Conectando a Wi-Fi");
-
-  while (WiFi.status() != WL_CONNECTED)
-  {
+  while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
   }
+  Serial.println("\n¡Conectado!");
 
-  Serial.println();
-  Serial.println("¡Conectado a Wi-Fi!");
-  Serial.print("Dirección IP: ");
-  Serial.println(WiFi.localIP());
-
-  // Inicializar botones como entrada con pull-up
   pinMode(PIN_BOTON_INC, INPUT_PULLUP);
   pinMode(PIN_BOTON_DEC, INPUT_PULLUP);
   pinMode(PIN_BOTON_RESET, INPUT_PULLUP);
-
-  // Inicializar buzzer
   pinMode(PIN_BUZZER, OUTPUT);
   digitalWrite(PIN_BUZZER, LOW);
 
-  // Inicializar NeoPixels
   pixels.begin();
   pixels.setBrightness(80);
   pixels.clear();
   pixels.show();
-  Serial.println("NeoPixels inicializados");
 
-  // Inicializar OLED
-  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
-  {
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
     Serial.println("OLED no encontrado!");
-  }
-  else
-  {
+  } else {
     display.display();
     delay(1000);
     display.clearDisplay();
     display.setTextSize(1);
     display.setTextColor(SSD1306_WHITE);
-    Serial.println("OLED inicializado correctamente");
   }
 
-  // Inicializar EEPROM y cargar contador
   EEPROM.begin(4);
   cargarContadorEEPROM();
-  Serial.println("Contador de semillas: " + String(contadorSemillas));
 
-  // Primera lectura del sensor y envío inicial
   leerSensor();
   actualizarOLED();
   enviarDatosSupabase();
@@ -152,80 +130,128 @@ void setup()
 
 void loop()
 {
-  // Detectar botones con debounce
+  // Detectar botones físicos (Lógica Local)
   bool estadoActualInc = digitalRead(PIN_BOTON_INC);
   bool estadoActualDec = digitalRead(PIN_BOTON_DEC);
   bool estadoActualReset = digitalRead(PIN_BOTON_RESET);
 
-  // Detectar flanco de HIGH a LOW (botón presionado)
-  if (estadoAnteriorInc == HIGH && estadoActualInc == LOW)
-  {
+  if (estadoAnteriorInc == HIGH && estadoActualInc == LOW) {
     actualizarContador(1);
     sonarBuzzer(1);
-    Serial.println("Botón + presionado. Semillas: " + String(contadorSemillas));
-    enviarDatosSupabase(); // Reporte inmediato por evento
+    enviarDatosSupabase();
   }
-  if (estadoAnteriorDec == HIGH && estadoActualDec == LOW)
-  {
+  if (estadoAnteriorDec == HIGH && estadoActualDec == LOW) {
     actualizarContador(-1);
     sonarBuzzer(1);
-    Serial.println("Botón - presionado. Semillas: " + String(contadorSemillas));
-    enviarDatosSupabase(); // Reporte inmediato por evento
+    enviarDatosSupabase();
   }
-  if (estadoAnteriorReset == HIGH && estadoActualReset == LOW)
-  {
+  if (estadoAnteriorReset == HIGH && estadoActualReset == LOW) {
     actualizarContador(-contadorSemillas);
     sonarBuzzer(2);
-    Serial.println("Botón RESET presionado. Contador reseteado");
-    enviarDatosSupabase(); // Reporte inmediato por evento
+    enviarDatosSupabase();
   }
 
-  // Actualizar estados anteriores
   estadoAnteriorInc = estadoActualInc;
   estadoAnteriorDec = estadoActualDec;
   estadoAnteriorReset = estadoActualReset;
 
-  // Leer sensor periódicamente
   unsigned long tiempoActual = millis();
-  if (tiempoActual - ultimaLectura >= intervaloLectura)
-  {
+
+  // Polling de comandos desde la Web
+  if (tiempoActual - ultimaEscuchaComandos >= intervaloEscucha) {
+    ultimaEscuchaComandos = tiempoActual;
+    recibirComandosSupabase();
+  }
+
+  // Lectura periódica de sensores
+  if (tiempoActual - ultimaLectura >= intervaloLectura) {
     ultimaLectura = tiempoActual;
     leerSensor();
     actualizarOLED();
   }
 
-  // Reporte periódico a Supabase
-  if (tiempoActual - ultimoReporteSupabase >= intervaloReporte)
-  {
+  // Reporte periódico a la nube
+  if (tiempoActual - ultimoReporteSupabase >= intervaloReporte) {
     ultimoReporteSupabase = tiempoActual;
     enviarDatosSupabase();
   }
 
-  // Actualizar NeoPixels (frecuente para animación suave)
-  if (tiempoActual - ultimaActualizacionLED >= intervaloLED)
-  {
+  // Animación NeoPixels
+  if (tiempoActual - ultimaActualizacionLED >= intervaloLED) {
     ultimaActualizacionLED = tiempoActual;
     actualizarNeoPixels();
   }
 }
 
-// Envío de datos a Supabase Cloud
+void recibirComandosSupabase()
+{
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    // Pedir el comando más viejo no ejecutado
+    String apiPath = String(supabaseUrl) + "/rest/v1/comandos?ejecutado=eq.false&order=created_at.asc&limit=1";
+    
+    http.begin(apiPath);
+    http.addHeader("apikey", supabaseKey);
+    http.addHeader("Authorization", "Bearer " + String(supabaseKey));
+
+    int httpResponseCode = http.GET();
+
+    if (httpResponseCode == 200) {
+      String response = http.getString();
+      JsonDocument doc;
+      deserializeJson(doc, response);
+
+      if (doc.size() > 0) {
+        int id = doc[0]["id"];
+        const char* accion = doc[0]["accion"];
+        int valor = doc[0]["valor"];
+
+        Serial.print("Comando recibido: "); Serial.println(accion);
+
+        // EJECUTAR ACCIÓN FÍSICA
+        if (strcmp(accion, "sumar") == 0) {
+          actualizarContador(valor);
+          sonarBuzzer(1);
+        } else if (strcmp(accion, "restar") == 0) {
+          actualizarContador(-valor);
+          sonarBuzzer(1);
+        } else if (strcmp(accion, "resetear") == 0) {
+          actualizarContador(-contadorSemillas);
+          sonarBuzzer(2);
+        }
+
+        // MARCAR COMO EJECUTADO (PATCH)
+        String patchPath = String(supabaseUrl) + "/rest/v1/comandos?id=eq." + String(id);
+        http.begin(patchPath);
+        http.addHeader("apikey", supabaseKey);
+        http.addHeader("Authorization", "Bearer " + String(supabaseKey));
+        http.addHeader("Content-Type", "application/json");
+        
+        String patchBody = "{\"ejecutado\": true}";
+        int patchResponseCode = http.PATCH(patchBody);
+        
+        Serial.print("Comando marcado como ejecutado. Status: "); Serial.println(patchResponseCode);
+        
+        // Reportar el nuevo estado de semillas inmediatamente
+        enviarDatosSupabase();
+        actualizarOLED();
+      }
+    }
+    http.end();
+  }
+}
+
 void enviarDatosSupabase()
 {
-  if (WiFi.status() == WL_CONNECTED)
-  {
+  if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
     String apiPath = String(supabaseUrl) + "/rest/v1/lecturas";
-
     http.begin(apiPath);
-
-    // Configurar Headers para Supabase
     http.addHeader("apikey", supabaseKey);
     http.addHeader("Authorization", "Bearer " + String(supabaseKey));
     http.addHeader("Content-Type", "application/json");
-    http.addHeader("Prefer", "return=minimal"); // No necesitamos la respuesta completa para ahorrar RAM
+    http.addHeader("Prefer", "return=minimal");
 
-    // Crear JSON de datos con precisión controlada
     JsonDocument doc;
     doc["temperatura"] = (int)(temperatura * 10) / 10.0;
     doc["humedad"] = (int)(humedad * 10) / 10.0;
@@ -233,160 +259,67 @@ void enviarDatosSupabase()
 
     String requestBody;
     serializeJson(doc, requestBody);
-
-    // Enviar POST
     int httpResponseCode = http.POST(requestBody);
-
-    if (httpResponseCode > 0)
-    {
-      Serial.print("Supabase: Datos enviados. Código respuesta: ");
-      Serial.println(httpResponseCode); // 201 = Created (éxito)
-    }
-    else
-    {
-      Serial.print("Supabase: Error en el envío. Código: ");
-      Serial.println(httpResponseCode);
-    }
-
     http.end();
-  }
-  else
-  {
-    Serial.println("Supabase: Error - WiFi no conectado");
   }
 }
 
-// Funciones para el contador de semillas
-void actualizarContador(int delta)
-{
+void actualizarContador(int delta) {
   contadorSemillas += delta;
-  if (contadorSemillas < 0)
-    contadorSemillas = 0;
+  if (contadorSemillas < 0) contadorSemillas = 0;
   guardarContadorEEPROM();
 }
 
-void guardarContadorEEPROM()
-{
+void guardarContadorEEPROM() {
   EEPROM.put(DIR_EEPROM, contadorSemillas);
   EEPROM.commit();
 }
 
-void cargarContadorEEPROM()
-{
+void cargarContadorEEPROM() {
   EEPROM.get(DIR_EEPROM, contadorSemillas);
-  if (contadorSemillas < 0)
-    contadorSemillas = 0;
+  if (contadorSemillas < 0) contadorSemillas = 0;
 }
 
-// Función para leer el sensor HTU21DF
-void leerSensor()
-{
+void leerSensor() {
   temperatura = htu.readTemperature();
   humedad = htu.readHumidity();
-
-  // Mostrar en Serial Monitor
-  Serial.println("--- Lectura del Sensor ---");
-  Serial.print("T: ");
-  Serial.print(temperatura, 1);
-  Serial.print("C | ");
-  Serial.print("H: ");
-  Serial.print(humedad, 1);
-  Serial.println("%");
 }
 
-// Actualizar pantalla OLED (ahora con info de la nube)
-void actualizarOLED()
-{
+void actualizarOLED() {
   display.clearDisplay();
   display.setCursor(0, 0);
-
   display.setTextSize(1);
-  display.println("FANIOT CLOUD");
-
+  display.println("FANIOT CLOUD CONTROL");
   display.setTextSize(2);
-  display.print("T:");
-  display.print(temperatura, 1);
-  display.println("C");
-
-  display.print("H:");
-  display.print(humedad, 1);
-  display.println("%");
-
+  display.print("T:"); display.print(temperatura, 1); display.println("C");
+  display.print("H:"); display.print(humedad, 1); display.println("%");
   display.setTextSize(1);
-  display.print("Semillas: ");
-  display.print(contadorSemillas);
-
+  display.print("Semillas: "); display.print(contadorSemillas);
   display.setCursor(0, 56);
-  display.print("Status: Cloud Active");
-
+  display.print("Status: Bidirectional");
   display.display();
 }
 
-// Función para sonar el buzzer
-void sonarBuzzer(int tipo)
-{
-  if (tipo == 1)
-    tone(PIN_BUZZER, 1000, 100);
-  else if (tipo == 2)
-  {
-    for (int i = 0; i < 3; i++)
-    {
+void sonarBuzzer(int tipo) {
+  if (tipo == 1) tone(PIN_BUZZER, 1000, 100);
+  else if (tipo == 2) {
+    for (int i = 0; i < 3; i++) {
       tone(PIN_BUZZER, 1500, 100);
       delay(150);
     }
   }
 }
 
-// Indicador ambiental con NeoPixels
-void actualizarNeoPixels()
-{
+void actualizarNeoPixels() {
   uint8_t r = 0, g = 0, b = 0;
-
-  if (temperatura < 15.0)
-  {
-    r = 0;
-    g = 0;
-    b = 255;
-  }
-  else if (temperatura < 20.0)
-  {
-    float t = (temperatura - 15.0) / 5.0;
-    r = 0;
-    g = (uint8_t)(255 * t);
-    b = (uint8_t)(255 * (1.0 - t));
-  }
-  else if (temperatura < 25.0)
-  {
-    r = 0;
-    g = 255;
-    b = 0;
-  }
-  else if (temperatura < 30.0)
-  {
-    float t = (temperatura - 25.0) / 5.0;
-    r = (uint8_t)(255 * t);
-    g = (uint8_t)(255 * (1.0 - t));
-    b = 0;
-  }
-  else
-  {
-    r = 255;
-    g = 0;
-    b = 0;
-  }
-
+  if (temperatura < 15.0) { r = 0; g = 0; b = 255; }
+  else if (temperatura < 20.0) { float t = (temperatura - 15.0) / 5.0; r = 0; g = (uint8_t)(255 * t); b = (uint8_t)(255 * (1.0 - t)); }
+  else if (temperatura < 25.0) { r = 0; g = 255; b = 0; }
+  else if (temperatura < 30.0) { float t = (temperatura - 25.0) / 5.0; r = (uint8_t)(255 * t); g = (uint8_t)(255 * (1.0 - t)); b = 0; }
+  else { r = 255; g = 0; b = 0; }
   float breathPhase = (sin(millis() / 1500.0 * PI) + 1.0) / 2.0;
-  float humClamped = constrain(humedad, 0.0f, 100.0f);
-  float humBrightness = 0.3 + 0.7 * (humClamped / 100.0);
+  float humBrightness = 0.3 + 0.7 * (constrain(humedad, 0.0f, 100.0f) / 100.0);
   float finalBrightness = humBrightness * (0.6 + 0.4 * breathPhase);
-
-  uint8_t finalR = (uint8_t)(r * finalBrightness);
-  uint8_t finalG = (uint8_t)(g * finalBrightness);
-  uint8_t finalB = (uint8_t)(b * finalBrightness);
-
-  for (int i = 0; i < NUM_NEOPIXELS; i++)
-  {
-    pixels.setPixelColor(i, pixels.Color(finalR, finalG, finalB));
-  }
+  for (int i = 0; i < NUM_NEOPIXELS; i++) { pixels.setPixelColor(i, pixels.Color((uint8_t)(r * finalBrightness), (uint8_t)(g * finalBrightness), (uint8_t)(b * finalBrightness))); }
   pixels.show();
 }
