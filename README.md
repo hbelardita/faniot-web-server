@@ -2,6 +2,9 @@
 
 Sistema de monitoreo ambiental con ESP32 que reporta temperatura, humedad y contador de semillas a la nube usando **Supabase**.
 
+
+> **⚙️ Hardware Base:** [Kit Maker 2.0 de Faniot](https://faniot.com.ar/producto-kitmaker2-0).
+
 ---
 
 ## Arquitectura
@@ -31,7 +34,7 @@ Este proyecto utiliza un archivo `include/config.h` para las credenciales, el cu
 ## Hardware y Periféricos
 
 - **Sensores:** HTU21DF (Temperatura y Humedad).
-- **Actuadores locales:** 
+- **Actuadores locales:**
   - Pantalla OLED SSD1306 (Estado del sistema).
   - 4 NeoPixels (Indicador visual de ambiente).
   - Buzzer (Feedback sonoro).

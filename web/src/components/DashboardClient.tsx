@@ -128,9 +128,9 @@ export default function DashboardClient() {
         </div>
         
         <div className="bg-white/40 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/60 shadow-2xl shadow-slate-200/50 space-y-4">
-          <p className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">Misión del Proyecto</p>
+          <p className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">Acerca del Proyecto</p>
           <p className="text-slate-600 leading-relaxed font-medium">
-            Faniot Cloud democratiza el acceso a la telemetría agrícola. Este dashboard procesa flujos de datos en tiempo real mediante WebSockets, permitiendo una toma de decisiones inmediata sobre el microclima de almacenamiento.
+            Proyecto desarrollado y presentado por la sede de <strong>General Urquiza</strong> de <a href="https://redmakermisiones.com.ar/espaciosmaker" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-700 hover:underline transition-colors font-bold">Red Maker Misiones</a>. El hardware base utilizado para este monitor ambiental es la placa <a href="https://faniot.com.ar/producto-kitmaker2-0" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-700 hover:underline transition-colors font-bold">Kit Maker 2.0 de Faniot</a>. Este dashboard procesa flujos de datos en tiempo real permitiendo una toma de decisiones inmediata.
           </p>
         </div>
       </footer>
