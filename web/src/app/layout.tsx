@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -12,12 +12,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
   title: "Faniot Cloud | Monitor IoT de Semillas 🚀",
   description: "Sistema de monitoreo ambiental en tiempo real para el Almacén de Semillas Faniot. Datos directos desde el hardware a tu pantalla.",
   keywords: ["Faniot", "IoT", "Semillas", "Monitoreo Ambiental", "ESP32", "Realtime"],
   authors: [{ name: "Faniot Team" }],
-  viewport: "width=device-width, initial-scale=1",
   robots: "index, follow",
 };
 

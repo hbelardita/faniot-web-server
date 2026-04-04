@@ -60,45 +60,57 @@ export default function DashboardClient() {
       </div>
 
       {error && (
-        <div className="p-6 bg-red-50 border border-red-100 text-red-600 rounded-[2rem] font-bold text-sm shadow-xl shadow-red-500/5 animate-bounce" role="alert">
+        <div className="p-6 bg-red-50 border border-red-200 text-red-600 rounded-[2rem] font-bold text-sm shadow-xl shadow-red-500/5 animate-bounce" role="alert">
           ⚠️ Error de conexión: {error}
         </div>
       )}
 
-      {/* Dashboard Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
-        <MetricCard
-          title="Temperatura Ambiente"
-          value={latestReading?.temperatura ?? 0}
-          unit="°C"
-          icon={<Thermometer className="w-6 h-6" />}
-          color="blue"
-          progress={(latestReading?.temperatura ?? 0) * 2.5}
-        />
+      {/* Contenido Principal (Cards y Gráfico) con feedback de estado Offline */}
+      <div className={cn(
+        "space-y-12 transition-all duration-700 relative",
+        !isOnline && "opacity-50 grayscale-[0.5] pointer-events-none"
+      )}>
+        {!isOnline && history.length > 0 && (
+          <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] uppercase font-black tracking-[0.2em] px-6 py-2 rounded-full z-20 shadow-2xl animate-in zoom-in duration-300">
+            Mostrando últimos datos conocidos
+          </div>
+        )}
 
-        <MetricCard
-          title="Humedad Relativa"
-          value={latestReading?.humedad ?? 0}
-          unit="%"
-          icon={<Droplets className="w-6 h-6" />}
-          color="emerald"
-          progress={latestReading?.humedad ?? 0}
-        />
+        {/* Dashboard Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
+          <MetricCard
+            title="Temperatura Ambiente"
+            value={latestReading?.temperatura ?? 0}
+            unit="°C"
+            icon={<Thermometer className="w-6 h-6" />}
+            color="blue"
+            progress={(latestReading?.temperatura ?? 0) * 2.5}
+          />
 
-        <MetricCard
-          title="Almacén de Semillas"
-          value={latestReading?.semillas ?? 0}
-          unit="ud"
-          icon={<Sprout className="w-6 h-6" />}
-          color="amber"
-          progress={(latestReading?.semillas ?? 0) / 10}
-        />
+          <MetricCard
+            title="Humedad Relativa"
+            value={latestReading?.humedad ?? 0}
+            unit="%"
+            icon={<Droplets className="w-6 h-6" />}
+            color="emerald"
+            progress={latestReading?.humedad ?? 0}
+          />
+
+          <MetricCard
+            title="Almacén de Semillas"
+            value={latestReading?.semillas ?? 0}
+            unit="ud"
+            icon={<Sprout className="w-6 h-6" />}
+            color="amber"
+            progress={(latestReading?.semillas ?? 0) / 10}
+          />
+        </div>
+
+        {/* History Chart */}
+        <section className="animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 fill-mode-both">
+          <HistoryChart data={history} />
+        </section>
       </div>
-
-      {/* History Chart */}
-      <section className="animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 fill-mode-both">
-        <HistoryChart data={history} />
-      </section>
 
       {/* Footer info */}
       <footer className="pt-16 border-t border-slate-200/60 grid grid-cols-1 md:grid-cols-2 gap-12">
