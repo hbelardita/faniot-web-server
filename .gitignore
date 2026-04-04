@@ -1,0 +1,25 @@
+# General
+.DS_Store
+.vscode/
+*.log
+
+# Node & Next.js
+node_modules/
+.next/
+web/node_modules/
+web/.next/
+web/.env*
+web/.env.local
+web/.env.production
+web/.env.development
+
+# PlatformIO & Firmware
+.pio/
+firmware/.pio/
+firmware/include/config.h
+firmware/include/config.h.example
+!firmware/include/config.h.example
+
+# Diversos
+.vercel
+.pnpm-debug.log*
