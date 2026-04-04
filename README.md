@@ -1,59 +1,58 @@
-# Faniot - Monitor Ambiental ESP32
+# Faniot - Monitor Ambiental ESP32 (Cloud Edition) 🚀☁️
 
-Sistema de monitoreo ambiental con ESP32 que lee temperatura y humedad (sensor HTU21DF), contador de semillas con botones físicos e interfaz web.
-
----
-
-## Hardware
-
-- ESP32
-- Sensor HTU21DF (temperatura/humedad)
-- Pantalla OLED SSD1306 (128x64)
-- 4 NeoPixels WS2812B
-- Buzzer
-- 3 Botones (GPIO0, GPIO15, GPIO13)
+Sistema de monitoreo ambiental con ESP32 que reporta temperatura, humedad y contador de semillas a la nube usando **Supabase**.
 
 ---
 
-## Configuración WiFi
+## Arquitectura
 
-Editar `src/main.cpp` y cambiar las credenciales:
-
-```cpp
-// Configuración de la red Wi-Fi
-const char *ssid = "TU_RED";           // Tu red Wi-Fi
-const char *password = "TU_PASSWORD"; // Tu contraseña
-```
+- **Hardware:** ESP32 (Firmware en C++ / PlatformIO).
+- **Backend:** Supabase (Base de datos PostgreSQL + API Realtime).
+- **Frontend:** Next.js (Dashboard público/privado accesible desde cualquier lugar).
 
 ---
 
-## Compilar y Subir
+## Configuración y Seguridad 🔐
+
+Este proyecto utiliza un archivo `include/config.h` para las credenciales, el cual está ignorado por Git para seguridad.
+
+### Pasos para configurar:
+
+1.  Copia el archivo de ejemplo:
+    ```bash
+    cp include/config.h.example include/config.h
+    ```
+2.  Edita `include/config.h` con tus credenciales:
+    - **WiFi:** Tu SSID y Password.
+    - **Supabase:** Tu `URL` y `Service Role Key` (sacada de Settings -> API).
+
+---
+
+## Hardware y Periféricos
+
+- **Sensores:** HTU21DF (Temperatura y Humedad).
+- **Actuadores locales:** 
+  - Pantalla OLED SSD1306 (Estado del sistema).
+  - 4 NeoPixels (Indicador visual de ambiente).
+  - Buzzer (Feedback sonoro).
+- **Botones físicos:** GPIO0, GPIO15 y GPIO13 (Control del contador).
+
+---
+
+## Desarrollo (Firmware)
+
+### Compilar y Subir
 
 ```bash
-# Compilar
+# Instalar dependencias y compilar
 pio run
 
-# Subir firmware
+# Subir firmware al ESP32
 pio run --target upload
 
-# Subir y abrir monitor serie
-pio run --target upload && pio device monitor
+# Monitorear salida serial
+pio device monitor
 ```
-
----
-
-## Endpoints Web
-
-| Ruta | Descripción |
-|------|-------------|
-| `/` | Página principal con sensores |
-| `/datos` | Datos en tiempo real (estilo terminal) |
-| `/api` | API JSON con datos del sistema |
-| `/semillas` | Controlador de contador de semillas |
-| `/semillas/inc` | Incrementar contador (+1) |
-| `/semillas/dec` | Decrementar contador (-1) |
-| `/semillas/reset` | Resetear contador a 0 |
-| `/semillas/add?c=N` | Agregar N semillas |
 
 ---
 
@@ -61,17 +60,19 @@ pio run --target upload && pio device monitor
 
 ```
 faniot/
+├── include/
+│   ├── config.h.example  # Plantilla de configuración (USAR ESTA)
+│   └── config.h          # Tu configuración real (IGNORADO POR GIT)
 ├── src/
-│   └── main.cpp         # Código principal
-├── platformio.ini       # Configuración PlatformIO
-├── README.md            # Este archivo
-└── .gitignore           # Ignorar carpeta .pio
+│   └── main.cpp          # Lógica principal del firmware
+├── platformio.ini        # Configuración de PlatformIO y librerías
+└── README.md             # Este archivo
 ```
 
 ---
 
-## Notas
+## Notas de Implementación
 
-- Los datos del contador de semillas se guardan en EEPROM (persisten al reiniciar)
-- La interfaz web se actualiza automáticamente cada 2 segundos sin recargar la página
-- Los NeoPixels indican la temperatura: Azul (frío) → Verde (ideal) → Rojo (caliente)
+- **Reporte:** El ESP32 envía datos cada 30 segundos de forma periódica y al instante cuando se detecta una pulsación de botón.
+- **Seguridad:** Los datos se envían vía HTTPS a la API REST de Supabase.
+- **Feedback Visual:** Los NeoPixels animan su brillo según la humedad y su color según la temperatura: Azul (Frío) → Verde (Ideal) → Rojo (Caliente).

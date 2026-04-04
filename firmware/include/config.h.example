@@ -1,0 +1,13 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+
+// === CONFIGURACIÓN WI-FI ===
+#define WIFI_SSID "TU_SSID_AQUI"
+#define WIFI_PASSWORD "TU_PASSWORD_AQUI"
+
+// === CONFIGURACIÓN SUPABASE ===
+// Consigue estos datos en Settings -> API de tu proyecto en Supabase
+#define SUPABASE_URL "https://TU_PROYECTO.supabase.co"
+#define SUPABASE_KEY "TU_SERVICE_ROLE_KEY"
+
+#endif
