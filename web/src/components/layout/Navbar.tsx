@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Activity, Gauge, Sprout } from 'lucide-react';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 const NAV_ITEMS = [
   { href: '/', label: 'Dashboard', icon: Gauge },
@@ -18,9 +19,9 @@ export default function Navbar({ isOnline }: NavbarProps) {
 
   return (
     <nav
-      className="sticky top-0 z-[var(--z-navbar)] backdrop-blur-xl border-b"
+      className="sticky top-0 z-[var(--z-navbar)] backdrop-blur-xl border-b transition-colors duration-500"
       style={{
-        background: 'rgba(3, 7, 18, 0.8)',
+        background: 'var(--surface-card)',
         borderColor: 'var(--border-default)',
       }}
     >
@@ -59,26 +60,29 @@ export default function Navbar({ isOnline }: NavbarProps) {
           })}
         </div>
 
-        {/* Status badge */}
-        <div
-          className="flex items-center gap-2.5 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest"
-          style={{
-            background: isOnline ? 'var(--emerald-glow)' : 'rgba(239, 68, 68, 0.1)',
-            color: isOnline ? 'var(--emerald-500)' : 'var(--status-offline)',
-          }}
-          aria-live="polite"
-        >
+        {/* Theme Toggle + Status badge */}
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
           <div
-            className="w-2 h-2 rounded-full"
+            className="flex items-center gap-2.5 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-500"
             style={{
-              background: isOnline ? 'var(--status-online)' : 'var(--status-offline)',
-              boxShadow: isOnline
-                ? `0 0 8px var(--status-online-glow)`
-                : `0 0 8px var(--status-offline-glow)`,
-              animation: isOnline ? 'pulse-glow 2s ease-in-out infinite' : 'none',
+              background: isOnline ? 'var(--emerald-glow)' : 'rgba(239, 68, 68, 0.1)',
+              color: isOnline ? 'var(--emerald-500)' : 'var(--status-offline)',
             }}
-          />
-          {isOnline ? 'Online' : 'Offline'}
+            aria-live="polite"
+          >
+            <div
+              className="w-2 h-2 rounded-full"
+              style={{
+                background: isOnline ? 'var(--status-online)' : 'var(--status-offline)',
+                boxShadow: isOnline
+                  ? `0 0 8px var(--status-online-glow)`
+                  : `0 0 8px var(--status-offline-glow)`,
+                animation: isOnline ? 'pulse-glow 2s ease-in-out infinite' : 'none',
+              }}
+            />
+            <span className="hidden sm:inline">{isOnline ? 'Online' : 'Offline'}</span>
+          </div>
         </div>
       </div>
     </nav>

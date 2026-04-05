@@ -1,10 +1,81 @@
 /* ============================================
    FANIOT CLOUD — Design Tokens
-   Dark IoT Dashboard Theme
+   Responsive Theme (Light / Dark)
    ============================================ */
 
 :root {
-  /* ---- Surfaces ---- */
+  /* ---- Light Mode (Default) ---- */
+  --surface-base: #f8fafc;       /* slate-50 */
+  --surface-raised: #f1f5f9;     /* slate-100 */
+  --surface-overlay: #e2e8f0;    /* slate-200 */
+  --surface-subtle: #cbd5e1;     /* slate-300 */
+  --surface-card: rgba(255, 255, 255, 0.8);
+  --surface-card-hover: rgba(255, 255, 255, 0.95);
+
+  /* ---- Text ---- */
+  --text-primary: #0f172a;       /* slate-900 */
+  --text-secondary: #475569;     /* slate-600 */
+  --text-muted: #64748b;         /* slate-500 */
+  --text-inverse: #f8fafc;
+
+  /* ---- Borders ---- */
+  --border-default: rgba(15, 23, 42, 0.08);
+  --border-hover: rgba(15, 23, 42, 0.15);
+  --border-active: rgba(15, 23, 42, 0.25);
+
+  /* ---- Accent: Amber (Temperature) ---- */
+  --amber-500: #d97706;          /* amber-600 for better contrast on light */
+  --amber-400: #f59e0b;
+  --amber-glow: rgba(245, 158, 11, 0.08);
+  --amber-glow-strong: rgba(245, 158, 11, 0.15);
+
+  /* ---- Accent: Emerald (Humidity) ---- */
+  --emerald-500: #059669;        /* emerald-600 */
+  --emerald-400: #10b981;
+  --emerald-glow: rgba(16, 185, 129, 0.08);
+  --emerald-glow-strong: rgba(16, 185, 129, 0.15);
+
+  /* ---- Accent: Blue (Seeds) ---- */
+  --blue-500: #2563eb;          /* blue-600 */
+  --blue-400: #3b82f6;
+  --blue-glow: rgba(59, 130, 246, 0.08);
+  --blue-glow-strong: rgba(59, 130, 246, 0.15);
+
+  /* ---- Status ---- */
+  --status-online: #10b981;
+  --status-online-glow: rgba(16, 185, 129, 0.2);
+  --status-offline: #dc2626;     /* red-600 */
+  --status-offline-glow: rgba(220, 38, 38, 0.2);
+
+  /* ---- Shadows ---- */
+  --shadow-card: 0 4px 20px rgba(15, 23, 42, 0.06);
+  --shadow-card-hover: 0 8px 30px rgba(15, 23, 42, 0.1);
+  --shadow-glow-amber: 0 0 40px rgba(245, 158, 11, 0.12);
+  --shadow-glow-emerald: 0 0 40px rgba(16, 185, 129, 0.12);
+  --shadow-glow-blue: 0 0 40px rgba(59, 130, 246, 0.12);
+
+  /* ---- Shared Constants ---- */
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2rem;
+  --radius-2xl: 2.5rem;
+  --radius-full: 9999px;
+
+  --transition-fast: 150ms ease;
+  --transition-base: 300ms ease;
+  --transition-slow: 500ms ease;
+  --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --z-base: 0;
+  --z-card: 10;
+  --z-navbar: 50;
+  --z-overlay: 100;
+  --z-toast: 200;
+}
+
+.dark {
+  /* ---- Dark Mode (Faniot Dark IoT Premium) ---- */
   --surface-base: #030712;       /* slate-950 */
   --surface-raised: #0f172a;     /* slate-900 */
   --surface-overlay: #1e293b;    /* slate-800 */
@@ -23,21 +94,16 @@
   --border-hover: rgba(148, 163, 184, 0.2);
   --border-active: rgba(148, 163, 184, 0.3);
 
-  /* ---- Accent: Amber (Temperature) ---- */
+  /* ---- Accent (Glow adjustment for Dark) ---- */
   --amber-500: #f59e0b;
-  --amber-400: #fbbf24;
   --amber-glow: rgba(245, 158, 11, 0.15);
   --amber-glow-strong: rgba(245, 158, 11, 0.3);
 
-  /* ---- Accent: Emerald (Humidity) ---- */
   --emerald-500: #10b981;
-  --emerald-400: #34d399;
   --emerald-glow: rgba(16, 185, 129, 0.15);
   --emerald-glow-strong: rgba(16, 185, 129, 0.3);
 
-  /* ---- Accent: Blue (Seeds) ---- */
   --blue-500: #3b82f6;
-  --blue-400: #60a5fa;
   --blue-glow: rgba(59, 130, 246, 0.15);
   --blue-glow-strong: rgba(59, 130, 246, 0.3);
 
@@ -47,31 +113,10 @@
   --status-offline: #ef4444;
   --status-offline-glow: rgba(239, 68, 68, 0.4);
 
-  /* ---- Radius ---- */
-  --radius-sm: 0.75rem;
-  --radius-md: 1rem;
-  --radius-lg: 1.5rem;
-  --radius-xl: 2rem;
-  --radius-2xl: 2.5rem;
-  --radius-full: 9999px;
-
   /* ---- Shadows ---- */
   --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.2);
   --shadow-card-hover: 0 8px 40px rgba(0, 0, 0, 0.3);
   --shadow-glow-amber: 0 0 30px rgba(245, 158, 11, 0.1);
   --shadow-glow-emerald: 0 0 30px rgba(16, 185, 129, 0.1);
   --shadow-glow-blue: 0 0 30px rgba(59, 130, 246, 0.1);
-
-  /* ---- Transitions ---- */
-  --transition-fast: 150ms ease;
-  --transition-base: 300ms ease;
-  --transition-slow: 500ms ease;
-  --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
-
-  /* ---- Z-Index ---- */
-  --z-base: 0;
-  --z-card: 10;
-  --z-navbar: 50;
-  --z-overlay: 100;
-  --z-toast: 200;
 }
