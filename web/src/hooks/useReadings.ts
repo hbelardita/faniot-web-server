@@ -1,57 +1,83 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Reading } from '@/components/HistoryChart';
+
+export type TimePeriod = '1h' | '6h' | '24h' | '7d';
+
+const PERIOD_LIMITS: Record<TimePeriod, number> = {
+  '1h': 60,
+  '6h': 60,
+  '24h': 120,
+  '7d': 200,
+};
+
+function getPeriodDate(period: TimePeriod): string {
+  const now = new Date();
+  switch (period) {
+    case '1h': now.setHours(now.getHours() - 1); break;
+    case '6h': now.setHours(now.getHours() - 6); break;
+    case '24h': now.setHours(now.getHours() - 24); break;
+    case '7d': now.setDate(now.getDate() - 7); break;
+  }
+  return now.toISOString();
+}
 
 export function useReadings() {
   const [history, setHistory] = useState<Reading[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(false);
+  const [period, setPeriod] = useState<TimePeriod>('1h');
 
   const latestReading = history[0] || null;
 
+  // Heartbeat: check if hardware is online based on last reading timestamp
   useEffect(() => {
     if (!latestReading) return;
 
     const checkStatus = () => {
       const lastReadingTime = new Date(latestReading.created_at).getTime();
-      // Consider offline if no reading in the last 60 seconds
-      const isNowOnline = Date.now() - lastReadingTime < 60000;
-      setIsOnline(isNowOnline);
+      setIsOnline(Date.now() - lastReadingTime < 60000);
     };
 
     checkStatus();
     const interval = setInterval(checkStatus, 10000);
-
     return () => clearInterval(interval);
   }, [latestReading]);
 
-  useEffect(() => {
-    async function fetchInitialData() {
-      try {
-        const { data, error } = await supabase
-          .from('lecturas')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(30);
+  const fetchData = useCallback(async (selectedPeriod: TimePeriod) => {
+    try {
+      setError(null);
+      const since = getPeriodDate(selectedPeriod);
 
-        if (error) throw error;
+      const { data, error: queryError } = await supabase
+        .from('lecturas')
+        .select('*')
+        .gte('created_at', since)
+        .order('created_at', { ascending: false })
+        .limit(PERIOD_LIMITS[selectedPeriod]);
 
-        if (data && data.length > 0) {
-          setHistory(data);
-          // isOnline is derived from the heartbeat effect based on latest reading
-        }
-      } catch (err: any) {
-        setError(err.message);
-        setIsOnline(false);
-      } finally {
-        setIsLoading(false);
+      if (queryError) throw queryError;
+      console.log(data)
+      if (data) {
+        setHistory(data);
       }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error fetching data');
+      setIsOnline(false);
+    } finally {
+      setIsLoading(false);
     }
+  }, []);
 
-    fetchInitialData();
+  // Initial fetch + refetch on period change
+  useEffect(() => {
+    setIsLoading(true);
+    fetchData(period);
+  }, [period, fetchData]);
 
-    // Realtime subscription
+  // Realtime subscription (always listens, regardless of period)
+  useEffect(() => {
     const channel = supabase
       .channel('lecturas_realtime')
       .on(
@@ -63,25 +89,35 @@ export function useReadings() {
         },
         (payload) => {
           const newReading = payload.new as Reading;
-          setHistory(prev => [newReading, ...prev].slice(0, 30));
+          setHistory(prev => [newReading, ...prev].slice(0, PERIOD_LIMITS[period]));
         }
       )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log('Realtime subscription active');
-        }
-      });
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [period]);
+
+  // Extract spark data for a specific field (last 10 readings, chronological)
+  const getSparkData = useCallback(
+    (field: keyof Pick<Reading, 'temperatura' | 'humedad' | 'semillas'>) => {
+      return history
+        .slice(0, 10)
+        .map(r => r[field])
+        .reverse();
+    },
+    [history]
+  );
 
   return {
     history,
     latestReading,
     isLoading,
     error,
-    isOnline
+    isOnline,
+    period,
+    setPeriod,
+    getSparkData,
   };
 }

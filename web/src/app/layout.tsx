@@ -15,10 +15,11 @@ const geistMono = Geist_Mono({
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  themeColor: "#030712",
 };
 
 export const metadata: Metadata = {
-  title: "Faniot Cloud | Monitor IoT de Semillas 🚀",
+  title: "Faniot Cloud | Monitor IoT de Semillas",
   description: "Sistema de monitoreo ambiental en tiempo real para el Almacén de Semillas Faniot. Datos directos desde el hardware a tu pantalla.",
   keywords: ["Faniot", "IoT", "Semillas", "Monitoreo Ambiental", "ESP32", "Realtime"],
   authors: [{ name: "Faniot Team" }],
@@ -35,7 +36,7 @@ export default function RootLayout({
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-slate-50 selection:bg-emerald-100 selection:text-emerald-900">
+      <body className="min-h-full">
         {children}
       </body>
     </html>

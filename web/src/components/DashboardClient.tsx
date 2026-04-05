@@ -1,144 +1,165 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { Thermometer, Droplets, Sprout, Activity, RefreshCcw } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Thermometer, Droplets, Sprout } from 'lucide-react';
 import { useReadings } from '@/hooks/useReadings';
 import MetricCard from '@/components/MetricCard';
-import InfoItem from '@/components/InfoItem';
+import AppShell from '@/components/layout/AppShell';
+import { DashboardSkeleton } from '@/components/ui/Skeleton';
 
-// Dynamic import for the chart to avoid SSR cascading renders
-const HistoryChart = dynamic(() => import('@/components/HistoryChart'), { 
+const HistoryChart = dynamic(() => import('@/components/HistoryChart'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-[400px] bg-white/50 backdrop-blur-sm p-4 md:p-6 rounded-[2rem] border border-slate-100 shadow-sm flex items-center justify-center">
-      <div className="animate-pulse text-slate-400 font-medium">Preparando gráficos del sistema...</div>
-    </div>
-  )
+    <div
+      className="w-full h-[420px] rounded-2xl animate-shimmer"
+      style={{ background: 'var(--surface-raised)' }}
+    />
+  ),
 });
 
 export default function DashboardClient() {
-  const { history, latestReading, isLoading, error, isOnline } = useReadings();
+  const { history, latestReading, isLoading, error, isOnline, period, setPeriod, getSparkData } = useReadings();
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]" role="status" aria-busy="true">
-        <div className="flex flex-col items-center gap-4 text-center">
-          <div className="relative">
-            <RefreshCcw className="w-12 h-12 text-emerald-500 animate-spin" />
-            <div className="absolute inset-0 blur-xl bg-emerald-400/20 animate-pulse rounded-full" />
-          </div>
-          <p className="text-slate-500 font-semibold tracking-tight animate-pulse">
-            Sincronizando con Faniot Cloud...
-          </p>
-        </div>
-      </div>
+      <AppShell isOnline={false}>
+        <DashboardSkeleton />
+      </AppShell>
     );
   }
 
   return (
-    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out">
-      {/* Status Badge & Last Sync Info */}
-      <div className="flex flex-col items-end gap-3 px-2">
-        <div 
-          className={cn(
-            "inline-flex items-center gap-3 px-5 py-2.5 rounded-full font-bold text-xs uppercase tracking-[0.15em] transition-all duration-500 border backdrop-blur-md shadow-sm",
-            isOnline 
-              ? "bg-emerald-50/80 text-emerald-700 border-emerald-100/50 shadow-emerald-500/5" 
-              : "bg-red-50/80 text-red-700 border-red-100/50 shadow-red-500/5"
-          )}
-          aria-live="polite"
-        >
-          <div className={cn(
-            "w-2 h-2 rounded-full", 
-            isOnline 
-              ? "bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" 
-              : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"
-          )} />
-          {isOnline ? "Sistema en Línea" : "Sistema Desconectado"}
-        </div>
-        
+    <AppShell isOnline={isOnline}>
+      <div className="space-y-8 animate-fade-in">
+        {/* Header */}
+        <header className="space-y-2">
+          <h1
+            className="text-4xl md:text-5xl font-black tracking-tighter"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            Cloud<span style={{ color: 'var(--emerald-500)' }}>Monitor</span>
+          </h1>
+          <p
+            className="text-sm font-medium max-w-lg"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            Visualización inteligente de datos ambientales para el Almacén de Semillas.
+          </p>
+        </header>
+
+        {/* Offline banner */}
         {!isOnline && history.length > 0 && (
-          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 bg-slate-100/50 px-4 py-1.5 rounded-full border border-slate-200/50 animate-in fade-in slide-in-from-top-2 duration-700">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-300 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-slate-400"></span>
-            </span>
-            Datos Históricos Visualizados
+          <div
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-widest animate-slide-up"
+            style={{
+              background: 'rgba(239, 68, 68, 0.08)',
+              border: '1px solid rgba(239, 68, 68, 0.15)',
+              color: 'var(--status-offline)',
+            }}
+          >
+            <div
+              className="w-2 h-2 rounded-full flex-shrink-0"
+              style={{ background: 'var(--status-offline)', boxShadow: '0 0 8px var(--status-offline-glow)' }}
+            />
+            Hardware desconectado — mostrando datos históricos
           </div>
         )}
-      </div>
 
-      {error && (
-        <div className="p-6 bg-red-50 border border-red-200 text-red-600 rounded-[2rem] font-bold text-sm shadow-xl shadow-red-500/5 animate-bounce" role="alert">
-          ⚠️ Error de conexión: {error}
-        </div>
-      )}
+        {/* Error */}
+        {error && (
+          <div
+            className="p-4 rounded-xl text-sm font-bold animate-slide-up"
+            style={{
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.2)',
+              color: 'var(--status-offline)',
+            }}
+            role="alert"
+          >
+            ⚠️ Error de conexión: {error}
+          </div>
+        )}
 
-      {/* Contenido Principal (Cards y Gráfico) con feedback de estado Offline */}
-      <div className={cn(
-        "space-y-12 transition-all duration-700 relative",
-        !isOnline && "opacity-60 grayscale-[0.3] pointer-events-none"
-      )}>
-
-        {/* Dashboard Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
+        {/* Bento Grid — Metric Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           <MetricCard
-            title="Temperatura Ambiente"
+            title="Temperatura"
             value={latestReading?.temperatura ?? 0}
             unit="°C"
-            icon={<Thermometer className="w-6 h-6" />}
+            icon={<Thermometer className="w-5 h-5" />}
             color="amber"
-            progress={(latestReading?.temperatura ?? 0) * 2.5}
+            gaugeMax={50}
+            sparkData={getSparkData('temperatura')}
+            className="animate-slide-up stagger-1"
           />
-
           <MetricCard
-            title="Humedad Relativa"
+            title="Humedad"
             value={latestReading?.humedad ?? 0}
             unit="%"
-            icon={<Droplets className="w-6 h-6" />}
+            icon={<Droplets className="w-5 h-5" />}
             color="emerald"
-            progress={latestReading?.humedad ?? 0}
+            gaugeMax={100}
+            sparkData={getSparkData('humedad')}
+            className="animate-slide-up stagger-2"
           />
-
           <MetricCard
-            title="Almacén de Semillas"
+            title="Semillas"
             value={latestReading?.semillas ?? 0}
             unit="ud"
-            icon={<Sprout className="w-6 h-6" />}
+            icon={<Sprout className="w-5 h-5" />}
             color="blue"
-            progress={(latestReading?.semillas ?? 0) / 10}
+            gaugeMax={1000}
+            sparkData={getSparkData('semillas')}
+            className="animate-slide-up stagger-3"
           />
         </div>
 
         {/* History Chart */}
-        <section className="animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 fill-mode-both">
-          <HistoryChart data={history} />
-        </section>
-      </div>
+        <div className="animate-slide-up stagger-4">
+          <HistoryChart data={history} period={period} onPeriodChange={setPeriod} />
+        </div>
 
-      {/* Footer info */}
-      <footer className="pt-16 border-t border-slate-200/60 grid grid-cols-1 md:grid-cols-2 gap-12">
-        <div className="space-y-6">
-          <h3 className="flex items-center gap-3 font-black text-slate-800 uppercase tracking-tighter text-xl">
-            <Activity className="w-6 h-6 text-emerald-500" />
-            Estado Técnico
-          </h3>
-          <div className="grid grid-cols-2 gap-8">
-            <InfoItem label="Sincronización" value={latestReading ? new Date(latestReading.created_at).toLocaleTimeString() : '---'} />
-            <InfoItem label="Frecuencia" value="30 segundos" />
-            <InfoItem label="Transferencia" value="HTTPS Secure" />
-            <InfoItem label="Infraestructura" value="Edge Computing" />
+        {/* Footer */}
+        <footer
+          className="pt-8 border-t flex flex-col md:flex-row md:items-center justify-between gap-4"
+          style={{ borderColor: 'var(--border-default)' }}
+        >
+          <div className="space-y-1">
+            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+              Última sincronización
+            </p>
+            <p className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
+              {latestReading ? new Date(latestReading.created_at).toLocaleString() : '---'}
+            </p>
           </div>
-        </div>
-        
-        <div className="bg-white/40 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/60 shadow-2xl shadow-slate-200/50 space-y-4">
-          <p className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">Acerca del Proyecto</p>
-          <p className="text-slate-600 leading-relaxed font-medium">
-            Proyecto desarrollado y presentado por la sede de <strong>General Urquiza</strong> de <a href="https://redmakermisiones.com.ar/espaciosmaker" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-700 hover:underline transition-colors font-bold">Red Maker Misiones</a>. El hardware base utilizado para este monitor ambiental es la placa <a href="https://faniot.com.ar/producto-kitmaker2-0" target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:text-emerald-700 hover:underline transition-colors font-bold">Kit Maker 2.0 de Faniot</a>. Este dashboard procesa flujos de datos en tiempo real permitiendo una toma de decisiones inmediata.
-          </p>
-        </div>
-      </footer>
-    </div>
+          <div
+            className="text-xs leading-relaxed max-w-md"
+            style={{ color: 'var(--text-muted)' }}
+          >
+            Proyecto de{' '}
+            <a
+              href="https://redmakermisiones.com.ar/espaciosmaker"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold hover:underline transition-colors"
+              style={{ color: 'var(--emerald-400)' }}
+            >
+              Red Maker Misiones
+            </a>
+            {' '}— Sede General Urquiza.{' '}
+            Hardware:{' '}
+            <a
+              href="https://faniot.com.ar/producto-kitmaker2-0"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold hover:underline transition-colors"
+              style={{ color: 'var(--emerald-400)' }}
+            >
+              Kit Maker 2.0
+            </a>
+          </div>
+        </footer>
+      </div>
+    </AppShell>
   );
 }
