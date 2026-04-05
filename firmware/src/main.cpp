@@ -8,6 +8,7 @@
 #include <Adafruit_SSD1306.h>
 #include "Adafruit_HTU21DF.h"
 #include <Adafruit_NeoPixel.h>
+#include <qrcode.h>
 
 #include "config.h"
 
@@ -30,9 +31,7 @@ const int PIN_NEOPIXEL = 27;
 const int NUM_NEOPIXELS = 4;
 Adafruit_NeoPixel pixels(NUM_NEOPIXELS, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
 
-// Configuración de la red Wi-Fi
-// const char *ssid = WIFI_SSID;
-// const char *password = WIFI_PASSWORD;
+// Las credenciales WiFi ahora las maneja WiFiManager dinámicamente
 
 // Crear objetos
 Adafruit_HTU21DF htu = Adafruit_HTU21DF();
@@ -80,6 +79,41 @@ void actualizarNeoPixels();
 void enviarDatosSupabase();
 void recibirComandosSupabase();
 
+void configModeCallback(WiFiManager *myWiFiManager) {
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  
+  // Mover el texto a la derecha (X=68) para no pisar el margen blanco del QR
+  // Máximo 10 caracteres por línea (60px disponibles)
+  display.setCursor(68, 0);  display.println("Red Wi-Fi:");
+  display.setCursor(68, 16); display.println(myWiFiManager->getConfigPortalSSID());
+  display.setCursor(68, 32); display.println("---------");
+  display.setCursor(68, 48); display.println("Scan QR ->");
+
+  QRCode qrcode;
+  uint8_t qrcodeData[qrcode_getBufferSize(3)];
+  String qrText = "WIFI:S:" + myWiFiManager->getConfigPortalSSID() + ";T:nopass;;";
+  // Usar ECC 1 (Medium) para mejor lectura
+  qrcode_initText(&qrcode, qrcodeData, 3, 1, qrText.c_str());
+
+  int scale = 2; 
+  int offset_x = (64 - (qrcode.size * scale)) / 2;
+  int offset_y = (64 - (qrcode.size * scale)) / 2;
+
+  // CRÍTICO: Fondo blanco de 64x64 para crear el margen ("Quiet Zone") que la cámara necesita
+  display.fillRect(0, 0, 64, 64, SSD1306_WHITE);
+
+  for (uint8_t y = 0; y < qrcode.size; y++) {
+    for (uint8_t x = 0; x < qrcode.size; x++) {
+      if (qrcode_getModule(&qrcode, x, y)) {
+        display.fillRect(offset_x + x * scale, offset_y + y * scale, scale, scale, SSD1306_BLACK);
+      }
+    }
+  }
+  display.display();
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -87,14 +121,29 @@ void setup()
 
   Serial.println("=== Faniot: IoT Bidireccional ===");
 
+  // === INICIALIZAR OLED PRIMERO ===
+  // Esto es vital para que WiFiManager pueda dibujar el QR en la pantalla
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("OLED no encontrado!");
+  } else {
+    display.display();
+    delay(1000);
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+  }
+
   if (!htu.begin()) {
     Serial.println("Error: HTU21DF no encontrado!");
     while (1) delay(1000);
   }
 
   WiFiManager wm;
+  // wm.resetSettings(); // Descomentar para borrar WiFi guardado y forzar código QR
+  wm.setAPCallback(configModeCallback);
+  
   Serial.println("Iniciando portal cautivo si es necesario...");
-  bool res = wm.autoConnect("FANIOT-SETUP");
+  bool res = wm.autoConnect("FANIOT-AP");
   if(!res) {
     Serial.println("Fallo al conectar o timeout");
     // ESP.restart();
@@ -112,16 +161,6 @@ void setup()
   pixels.setBrightness(80);
   pixels.clear();
   pixels.show();
-
-  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    Serial.println("OLED no encontrado!");
-  } else {
-    display.display();
-    delay(1000);
-    display.clearDisplay();
-    display.setTextSize(1);
-    display.setTextColor(SSD1306_WHITE);
-  }
 
   EEPROM.begin(4);
   cargarContadorEEPROM();
