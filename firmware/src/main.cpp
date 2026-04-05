@@ -45,11 +45,18 @@ const int PIN_BOTON_RESET = 13; // GPIO13 - Reset
 float temperatura = 0.0;
 float humedad = 0.0;
 unsigned long ultimaLectura = 0;
-const long intervaloLectura = 2000;
+const long intervaloLectura = 5000; // Leer sensores cada 5 segundos
 
-// Timing para reporte a Supabase
+// Variables para Data on Change (Report by Exception)
+float ultimaTempEnviada = -999.0;
+float ultimaHumEnviada = -999.0;
+int ultimoContadorEnviado = -1;
+const float DELTA_TEMP = 0.5; // Reportar si cambia 0.5°C
+const float DELTA_HUM = 2.0;  // Reportar si cambia 2.0%
+
+// Timing para reporte a Supabase (Heartbeat / Keep-Alive)
 unsigned long ultimoReporteSupabase = 0;
-const long intervaloReporte = 30000; 
+const long intervaloReporte = 55000; // Máximo 55 segundos sin reportar (Heartbeat) 
 
 // Timing para escucha de comandos (Polling)
 unsigned long ultimaEscuchaComandos = 0;
@@ -210,11 +217,22 @@ void loop()
     ultimaLectura = tiempoActual;
     leerSensor();
     actualizarOLED();
+
+    // Evaluar Data on Change
+    bool cambioTemp = abs(temperatura - ultimaTempEnviada) >= DELTA_TEMP;
+    bool cambioHum = abs(humedad - ultimaHumEnviada) >= DELTA_HUM;
+    bool cambioContador = contadorSemillas != ultimoContadorEnviado;
+    
+    if (cambioTemp || cambioHum || cambioContador) {
+      Serial.println("Cambio significativo detectado. Forzando envio a Supabase...");
+      enviarDatosSupabase();
+    }
   }
 
-  // Reporte periódico a la nube
+  // Reporte periódico a la nube (Heartbeat / Keep-Alive)
   if (tiempoActual - ultimoReporteSupabase >= intervaloReporte) {
-    ultimoReporteSupabase = tiempoActual;
+    ultimoReporteSupabase = tiempoActual; // Se vuelve a actualizar en enviarDatosSupabase si es exitoso
+    Serial.println("Heartbeat de 55s alcanzado. Enviando a Supabase...");
     enviarDatosSupabase();
   }
 
@@ -302,6 +320,18 @@ void enviarDatosSupabase()
     String requestBody;
     serializeJson(doc, requestBody);
     int httpResponseCode = http.POST(requestBody);
+    
+    if (httpResponseCode >= 200 && httpResponseCode < 300) {
+      ultimaTempEnviada = doc["temperatura"];
+      ultimaHumEnviada = doc["humedad"];
+      ultimoContadorEnviado = doc["semillas"];
+      ultimoReporteSupabase = millis(); // Reiniciar timer de Heartbeat
+      Serial.println("Envio a Supabase OK. Estados actualizados.");
+    } else {
+      Serial.print("Error al enviar a Supabase. HTTP Code: ");
+      Serial.println(httpResponseCode);
+    }
+    
     http.end();
   }
 }
