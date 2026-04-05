@@ -8,6 +8,24 @@ export function useReadings() {
   const [error, setError] = useState<string | null>(null);
   const [isOnline, setIsOnline] = useState(false);
 
+  const latestReading = history[0] || null;
+
+  useEffect(() => {
+    if (!latestReading) return;
+
+    const checkStatus = () => {
+      const lastReadingTime = new Date(latestReading.created_at).getTime();
+      // Consider offline if no reading in the last 60 seconds
+      const isNowOnline = Date.now() - lastReadingTime < 60000;
+      setIsOnline(isNowOnline);
+    };
+
+    checkStatus();
+    const interval = setInterval(checkStatus, 10000);
+
+    return () => clearInterval(interval);
+  }, [latestReading]);
+
   useEffect(() => {
     async function fetchInitialData() {
       try {
@@ -19,9 +37,9 @@ export function useReadings() {
 
         if (error) throw error;
 
-        if (data) {
+        if (data && data.length > 0) {
           setHistory(data);
-          setIsOnline(true);
+          // isOnline is derived from the heartbeat effect based on latest reading
         }
       } catch (err: any) {
         setError(err.message);
@@ -46,7 +64,6 @@ export function useReadings() {
         (payload) => {
           const newReading = payload.new as Reading;
           setHistory(prev => [newReading, ...prev].slice(0, 30));
-          setIsOnline(true);
         }
       )
       .subscribe((status) => {
@@ -62,7 +79,7 @@ export function useReadings() {
 
   return {
     history,
-    latestReading: history[0] || null,
+    latestReading,
     isLoading,
     error,
     isOnline

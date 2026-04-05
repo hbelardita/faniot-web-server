@@ -38,25 +38,35 @@ export default function DashboardClient() {
 
   return (
     <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-1000 ease-out">
-      {/* Status Badge */}
-      <div className="flex justify-end">
+      {/* Status Badge & Last Sync Info */}
+      <div className="flex flex-col items-end gap-3 px-2">
         <div 
           className={cn(
-            "inline-flex items-center gap-3 px-5 py-2.5 rounded-full font-bold text-xs uppercase tracking-widest transition-all duration-500 border backdrop-blur-md",
+            "inline-flex items-center gap-3 px-5 py-2.5 rounded-full font-bold text-xs uppercase tracking-[0.15em] transition-all duration-500 border backdrop-blur-md shadow-sm",
             isOnline 
-              ? "bg-emerald-50 text-emerald-700 border-emerald-100 shadow-[0_0_20px_rgba(16,185,129,0.1)]" 
-              : "bg-red-50 text-red-700 border-red-100 shadow-[0_0_20px_rgba(239,68,68,0.1)]"
+              ? "bg-emerald-50/80 text-emerald-700 border-emerald-100/50 shadow-emerald-500/5" 
+              : "bg-red-50/80 text-red-700 border-red-100/50 shadow-red-500/5"
           )}
           aria-live="polite"
         >
           <div className={cn(
-            "w-2.5 h-2.5 rounded-full ring-4", 
+            "w-2 h-2 rounded-full", 
             isOnline 
-              ? "bg-emerald-500 ring-emerald-500/20 animate-pulse" 
-              : "bg-red-500 ring-red-500/20"
+              ? "bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" 
+              : "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"
           )} />
           {isOnline ? "Sistema en Línea" : "Sistema Desconectado"}
         </div>
+        
+        {!isOnline && history.length > 0 && (
+          <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 bg-slate-100/50 px-4 py-1.5 rounded-full border border-slate-200/50 animate-in fade-in slide-in-from-top-2 duration-700">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-300 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-slate-400"></span>
+            </span>
+            Datos Históricos Visualizados
+          </div>
+        )}
       </div>
 
       {error && (
@@ -68,13 +78,8 @@ export default function DashboardClient() {
       {/* Contenido Principal (Cards y Gráfico) con feedback de estado Offline */}
       <div className={cn(
         "space-y-12 transition-all duration-700 relative",
-        !isOnline && "opacity-50 grayscale-[0.5] pointer-events-none"
+        !isOnline && "opacity-60 grayscale-[0.3] pointer-events-none"
       )}>
-        {!isOnline && history.length > 0 && (
-          <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] uppercase font-black tracking-[0.2em] px-6 py-2 rounded-full z-20 shadow-2xl animate-in zoom-in duration-300">
-            Mostrando últimos datos conocidos
-          </div>
-        )}
 
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
