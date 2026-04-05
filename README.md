@@ -17,17 +17,26 @@ Sistema de monitoreo ambiental con ESP32 que reporta temperatura, humedad y cont
 
 ## Configuración y Seguridad 🔐
 
-Este proyecto utiliza un archivo `include/config.h` para las credenciales, el cual está ignorado por Git para seguridad.
+Este proyecto utiliza un archivo `include/config.h` para las credenciales de la nube, el cual está ignorado por Git para seguridad.
 
 ### Pasos para configurar:
 
 1.  Copia el archivo de ejemplo:
     ```bash
-    cp include/config.h.example include/config.h
+    cp firmware/include/config.h.example firmware/include/config.h
     ```
-2.  Edita `include/config.h` con tus credenciales:
-    - **WiFi:** Tu SSID y Password.
+2.  Edita `firmware/include/config.h` con tus credenciales de Supabase:
     - **Supabase:** Tu `URL` y `Service Role Key` (sacada de Settings -> API).
+
+### Configuración WiFi (Dinámica) 🌐
+
+Ya **no es necesario** escribir tu SSID y Password en el código. El firmware utiliza **WiFiManager**:
+
+1.  Al encender la placa por primera vez (o si no encuentra red), el ESP32 creará un punto de acceso llamado `FANIOT-SETUP`.
+2.  Conéctate a esa red desde tu celular o PC.
+3.  Se abrirá automáticamente un portal de configuración (si no, ve a `192.168.4.1`).
+4.  Selecciona tu red WiFi local, ingresa la contraseña y guarda.
+5.  La placa se reiniciará y quedará conectada permanentemente.
 
 ---
 
@@ -63,13 +72,17 @@ pio device monitor
 
 ```
 faniot/
-├── include/
-│   ├── config.h.example  # Plantilla de configuración (USAR ESTA)
-│   └── config.h          # Tu configuración real (IGNORADO POR GIT)
-├── src/
-│   └── main.cpp          # Lógica principal del firmware
-├── platformio.ini        # Configuración de PlatformIO y librerías
-└── README.md             # Este archivo
+├── firmware/
+│   ├── include/
+│   │   ├── config.h.example  # Plantilla para Supabase (USAR ESTA)
+│   │   └── config.h          # Tu configuración real (IGNORADO POR GIT)
+│   ├── src/
+│   │   └── main.cpp          # Lógica principal del firmware (WiFiManager + Supabase)
+│   └── platformio.ini        # Configuración de PlatformIO y librerías
+├── web/
+│   ├── src/                  # Código Next.js (Dashboard y Control)
+│   └── package.json          # Dependencias del frontend
+└── README.md                 # Este archivo
 ```
 
 ---

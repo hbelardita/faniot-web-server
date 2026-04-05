@@ -1,4 +1,5 @@
 #include <WiFi.h>
+#include <WiFiManager.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <Wire.h>
@@ -30,8 +31,8 @@ const int NUM_NEOPIXELS = 4;
 Adafruit_NeoPixel pixels(NUM_NEOPIXELS, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
 
 // Configuración de la red Wi-Fi
-const char *ssid = WIFI_SSID;
-const char *password = WIFI_PASSWORD;
+// const char *ssid = WIFI_SSID;
+// const char *password = WIFI_PASSWORD;
 
 // Crear objetos
 Adafruit_HTU21DF htu = Adafruit_HTU21DF();
@@ -91,13 +92,15 @@ void setup()
     while (1) delay(1000);
   }
 
-  WiFi.begin(ssid, password);
-  Serial.print("Conectando a Wi-Fi");
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+  WiFiManager wm;
+  Serial.println("Iniciando portal cautivo si es necesario...");
+  bool res = wm.autoConnect("FANIOT-SETUP");
+  if(!res) {
+    Serial.println("Fallo al conectar o timeout");
+    // ESP.restart();
+  } else {
+    Serial.println("\n¡Conectado exitosamente a la red local!");
   }
-  Serial.println("\n¡Conectado!");
 
   pinMode(PIN_BOTON_INC, INPUT_PULLUP);
   pinMode(PIN_BOTON_DEC, INPUT_PULLUP);
