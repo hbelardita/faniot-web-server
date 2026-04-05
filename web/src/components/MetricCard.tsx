@@ -6,7 +6,7 @@ import Sparkline from '@/components/dashboard/Sparkline';
 
 interface MetricCardProps {
   title: string;
-  value: number;
+  value: number | null;
   unit: string;
   icon: React.ReactNode;
   color: 'amber' | 'emerald' | 'blue';
@@ -86,12 +86,13 @@ export default function MetricCard({
   className = '',
 }: MetricCardProps) {
   const colors = COLOR_MAP[color];
-  const displayValue = useCountUp(value);
+  const displayValue = useCountUp(value ?? 0);
   const isInteger = unit === 'ud';
+  const isNull = value === null;
 
   return (
     <section
-      className={`relative overflow-hidden rounded-2xl p-6 transition-all duration-500 group ${className}`}
+      className={`relative overflow-hidden rounded-2xl p-6 transition-all duration-500 group ${className} ${isNull ? 'opacity-80 grayscale-[0.3]' : ''}`}
       style={{
         background: 'var(--surface-card)',
         border: '1px solid var(--border-default)',
@@ -99,8 +100,8 @@ export default function MetricCard({
         boxShadow: 'var(--shadow-card)',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = 'var(--border-hover)';
-        e.currentTarget.style.boxShadow = colors.shadow;
+        e.currentTarget.style.borderColor = isNull ? 'var(--border-default)' : 'var(--border-hover)';
+        e.currentTarget.style.boxShadow = isNull ? 'var(--shadow-card)' : colors.shadow;
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.borderColor = 'var(--border-default)';
@@ -110,8 +111,8 @@ export default function MetricCard({
     >
       {/* Ambient glow */}
       <div
-        className="absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
-        style={{ background: colors.glowStrong }}
+        className={`absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl opacity-0 ${isNull ? '' : 'group-hover:opacity-100'} transition-opacity duration-700 pointer-events-none`}
+        style={{ background: isNull ? 'transparent' : colors.glowStrong }}
         aria-hidden="true"
       />
 
@@ -119,8 +120,11 @@ export default function MetricCard({
       <div className="flex items-center justify-between mb-4 relative z-10">
         <div className="flex items-center gap-3">
           <div
-            className="p-2.5 rounded-xl"
-            style={{ background: colors.glow, color: colors.accent }}
+            className="p-2.5 rounded-xl transition-colors duration-500"
+            style={{ 
+              background: isNull ? 'var(--surface-subtle)' : colors.glow, 
+              color: isNull ? 'var(--text-muted)' : colors.accent 
+            }}
             aria-hidden="true"
           >
             {icon}
@@ -141,21 +145,21 @@ export default function MetricCard({
           <div className="flex items-baseline gap-1.5">
             <span
               className="text-5xl font-black tabular-nums tracking-tighter"
-              style={{ color: 'var(--text-primary)' }}
+              style={{ color: isNull ? 'var(--text-muted)' : 'var(--text-primary)' }}
             >
-              {isInteger ? Math.round(displayValue) : displayValue.toFixed(1)}
+              {isNull ? '--' : (isInteger ? Math.round(displayValue) : displayValue.toFixed(1))}
             </span>
             <span
-              className="text-xl font-bold"
-              style={{ color: 'var(--text-muted)' }}
+              className="text-xl font-bold transition-opacity"
+              style={{ color: 'var(--text-muted)', opacity: isNull ? 0.3 : 1 }}
             >
               {unit}
             </span>
           </div>
 
           {/* Sparkline */}
-          {sparkData.length >= 2 && (
-            <div className="pt-2">
+          {!isNull && sparkData.length >= 2 && (
+            <div className="pt-2 animate-fade-in">
               <Sparkline
                 data={sparkData}
                 color={colors.accent}
@@ -163,14 +167,19 @@ export default function MetricCard({
               />
             </div>
           )}
+          {isNull && (
+            <div className="pt-2 h-[32px] flex items-end animate-fade-in">
+              <div className="w-24 border-b-2 border-dashed border-[var(--surface-subtle)]" />
+            </div>
+          )}
         </div>
 
         {/* Gauge */}
-        <div className="flex-shrink-0">
+        <div className={`flex-shrink-0 transition-all duration-700 ${isNull ? 'opacity-30 grayscale' : ''}`}>
           <GaugeArc
-            value={value}
+            value={isNull ? 0 : value}
             max={gaugeMax}
-            color={colors.accent}
+            color={isNull ? 'var(--text-muted)' : colors.accent}
           />
         </div>
       </div>

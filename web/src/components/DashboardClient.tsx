@@ -84,7 +84,7 @@ export default function DashboardClient() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           <MetricCard
             title="Temperatura"
-            value={latestReading?.temperatura ?? 0}
+            value={latestReading?.temperatura ?? null}
             unit="°C"
             icon={<Thermometer className="w-5 h-5" />}
             color="amber"
@@ -94,7 +94,7 @@ export default function DashboardClient() {
           />
           <MetricCard
             title="Humedad"
-            value={latestReading?.humedad ?? 0}
+            value={latestReading?.humedad ?? null}
             unit="%"
             icon={<Droplets className="w-5 h-5" />}
             color="emerald"
@@ -104,7 +104,7 @@ export default function DashboardClient() {
           />
           <MetricCard
             title="Semillas"
-            value={latestReading?.semillas ?? 0}
+            value={latestReading?.semillas ?? null}
             unit="ud"
             icon={<Sprout className="w-5 h-5" />}
             color="blue"

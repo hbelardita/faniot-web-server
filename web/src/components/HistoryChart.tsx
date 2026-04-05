@@ -86,6 +86,38 @@ interface HistoryChartProps {
 }
 
 export default function HistoryChart({ data, period, onPeriodChange }: HistoryChartProps) {
+  if (data.length === 0) {
+    return (
+      <div
+        className="relative w-full min-w-0 p-5 md:p-8 rounded-2xl overflow-hidden transition-all duration-500 min-h-[380px] md:min-h-[440px] flex flex-col items-center justify-center"
+        style={{
+          background: 'var(--surface-card)',
+          border: '1px solid var(--border-default)',
+          backdropFilter: 'blur(16px)',
+          boxShadow: 'var(--shadow-card)',
+        }}
+      >
+        <div className="absolute inset-0 opacity-[0.03] animate-shimmer pointer-events-none" />
+        <div className="flex flex-col items-center gap-4 relative z-10 text-center animate-fade-in">
+          <div 
+            className="w-16 h-16 rounded-full flex items-center justify-center opacity-70"
+            style={{ background: 'var(--surface-overlay)', color: 'var(--text-muted)', border: '1px solid var(--border-default)' }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <div>
+            <h3 className="text-lg font-black tracking-tight" style={{ color: 'var(--text-secondary)' }}>
+              Sin registros
+            </h3>
+            <p className="text-xs font-semibold uppercase tracking-widest mt-1" style={{ color: 'var(--text-muted)' }}>
+              No hay datos para mostrar en este periodo.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const chartData = [...data].reverse().map(item => ({
     ...item,
     time: new Date(item.created_at).toLocaleTimeString([], {
