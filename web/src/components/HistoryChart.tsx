@@ -42,7 +42,7 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
       <div
         className="p-4 rounded-xl text-sm backdrop-blur-xl"
         style={{
-          background: 'rgba(15, 23, 42, 0.9)',
+          background: 'var(--surface-card)',
           border: '1px solid var(--border-hover)',
           boxShadow: 'var(--shadow-card)',
         }}
