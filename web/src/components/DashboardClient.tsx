@@ -88,7 +88,7 @@ export default function DashboardClient() {
             value={latestReading?.temperatura ?? 0}
             unit="°C"
             icon={<Thermometer className="w-6 h-6" />}
-            color="blue"
+            color="amber"
             progress={(latestReading?.temperatura ?? 0) * 2.5}
           />
 
@@ -106,7 +106,7 @@ export default function DashboardClient() {
             value={latestReading?.semillas ?? 0}
             unit="ud"
             icon={<Sprout className="w-6 h-6" />}
-            color="amber"
+            color="blue"
             progress={(latestReading?.semillas ?? 0) / 10}
           />
         </div>
