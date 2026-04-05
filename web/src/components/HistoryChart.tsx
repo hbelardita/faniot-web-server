@@ -159,7 +159,6 @@ export default function HistoryChart({ data }: { data: Reading[] }) {
               fillOpacity={1} 
               fill="url(#colorHum)" 
               animationDuration={1500}
-              animationDelay={300}
             />
           </AreaChart>
         </ResponsiveContainer>
