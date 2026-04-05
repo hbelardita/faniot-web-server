@@ -72,7 +72,8 @@ export function useReadings() {
 
   // Initial fetch + refetch on period change
   useEffect(() => {
-    setIsLoading(true);
+    // No establecemos setIsLoading(true) aquí para que las tarjetas de arriba
+    // no se desmonten y la data del gráfico se actualice en background (silenciosamente)
     fetchData(period);
   }, [period, fetchData]);
 
