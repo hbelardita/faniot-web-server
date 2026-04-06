@@ -31,19 +31,54 @@ export function useReadings() {
 
   const latestReading = history[0] || null;
 
-  // Heartbeat: check if hardware is online based on last reading timestamp
+  // Heartbeat: check if hardware is online based on the dispositivos table
   useEffect(() => {
-    if (!latestReading) return;
+    let lastKnownPing = Date.now();
 
-    const checkStatus = () => {
-      const lastReadingTime = new Date(latestReading.created_at).getTime();
-      setIsOnline(Date.now() - lastReadingTime < 60000);
+    const fetchStatus = async () => {
+      const { data } = await supabase
+        .from('dispositivos')
+        .select('last_ping')
+        .eq('id', 'faniot-main')
+        .single();
+        
+      if (data && data.last_ping) {
+        lastKnownPing = new Date(data.last_ping).getTime();
+        setIsOnline(Date.now() - lastKnownPing < 65000); // 65s tolerancia
+      }
     };
+    fetchStatus();
 
-    checkStatus();
-    const interval = setInterval(checkStatus, 10000);
-    return () => clearInterval(interval);
-  }, [latestReading]);
+    // Check status localmente cada 10 segundos
+    const interval = setInterval(() => {
+      setIsOnline(Date.now() - lastKnownPing < 65000);
+    }, 10000);
+
+    // Suscribirse a actualizaciones (PATCH) de Heartbeat
+    const channel = supabase
+      .channel('heartbeat_realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'dispositivos',
+          filter: 'id=eq.faniot-main',
+        },
+        (payload) => {
+          if (payload.new && payload.new.last_ping) {
+            lastKnownPing = new Date(payload.new.last_ping).getTime();
+            setIsOnline(true);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const fetchData = useCallback(async (selectedPeriod: TimePeriod) => {
     try {

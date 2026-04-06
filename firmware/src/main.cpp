@@ -57,6 +57,7 @@ const float DELTA_HUM = 2.0;  // Reportar si cambia 2.0%
 // Timing para reporte a Supabase (Heartbeat / Keep-Alive)
 unsigned long ultimoReporteSupabase = 0;
 const long intervaloReporte = 55000; // Máximo 55 segundos sin reportar (Heartbeat) 
+unsigned long pingCount = 0; // Contador de pings para enviar al Heartbeat
 
 // Timing para escucha de comandos (Polling)
 unsigned long ultimaEscuchaComandos = 0;
@@ -84,6 +85,7 @@ void actualizarOLED();
 void sonarBuzzer(int tipo);
 void actualizarNeoPixels();
 void enviarDatosSupabase();
+void enviarHeartbeatSupabase();
 void recibirComandosSupabase();
 
 void configModeCallback(WiFiManager *myWiFiManager) {
@@ -232,8 +234,8 @@ void loop()
   // Reporte periódico a la nube (Heartbeat / Keep-Alive)
   if (tiempoActual - ultimoReporteSupabase >= intervaloReporte) {
     ultimoReporteSupabase = tiempoActual; // Se vuelve a actualizar en enviarDatosSupabase si es exitoso
-    Serial.println("Heartbeat de 55s alcanzado. Enviando a Supabase...");
-    enviarDatosSupabase();
+    Serial.println("Heartbeat de 55s alcanzado. Enviando PING a Supabase...");
+    enviarHeartbeatSupabase();
   }
 
   // Animación NeoPixels
@@ -329,6 +331,38 @@ void enviarDatosSupabase()
       Serial.println("Envio a Supabase OK. Estados actualizados.");
     } else {
       Serial.print("Error al enviar a Supabase. HTTP Code: ");
+      Serial.println(httpResponseCode);
+    }
+    
+    http.end();
+  }
+}
+
+void enviarHeartbeatSupabase()
+{
+  if (WiFi.status() == WL_CONNECTED) {
+    pingCount++;
+    HTTPClient http;
+    // PATCH a la tabla dispositivos filtrando por id para actualizar el estado online
+    String apiPath = String(supabaseUrl) + "/rest/v1/dispositivos?id=eq.faniot-main";
+    http.begin(apiPath);
+    http.addHeader("apikey", supabaseKey);
+    http.addHeader("Authorization", "Bearer " + String(supabaseKey));
+    http.addHeader("Content-Type", "application/json");
+    http.addHeader("Prefer", "return=minimal");
+
+    JsonDocument doc;
+    doc["ping_count"] = pingCount;
+
+    String requestBody;
+    serializeJson(doc, requestBody);
+    int httpResponseCode = http.PATCH(requestBody);
+    
+    if (httpResponseCode >= 200 && httpResponseCode < 300) {
+      ultimoReporteSupabase = millis(); // Reiniciar timer
+      Serial.println("Heartbeat a Supabase OK.");
+    } else {
+      Serial.print("Error Heartbeat a Supabase. HTTP Code: ");
       Serial.println(httpResponseCode);
     }
     
