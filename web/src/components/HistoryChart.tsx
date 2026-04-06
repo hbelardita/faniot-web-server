@@ -20,10 +20,12 @@ export interface Reading {
 }
 
 const PERIODS: { value: TimePeriod; label: string }[] = [
-  { value: '1h', label: '1H' },
-  { value: '6h', label: '6H' },
-  { value: '24h', label: '24H' },
-  { value: '7d', label: '7D' },
+  { value: '1h', label: 'Última 1 Hora' },
+  { value: '6h', label: 'Últimas 6 Horas' },
+  { value: '24h', label: 'Últimas 24 Horas' },
+  { value: '7d', label: 'Últimos 7 Días' },
+  { value: '15d', label: 'Últimos 15 Días' },
+  { value: '30d', label: 'Últimos 30 Días' },
 ];
 
 interface CustomTooltipProps {
@@ -96,16 +98,17 @@ export default function HistoryChart({ data, period, onPeriodChange }: HistoryCh
 
   return (
     <div
-      className="relative w-full min-w-0 p-5 md:p-8 rounded-2xl overflow-hidden transition-all duration-500"
+      className="relative w-full min-w-0 py-5 px-0 md:p-8 md:rounded-2xl overflow-hidden transition-all duration-500"
       style={{
         background: 'var(--surface-card)',
-        border: '1px solid var(--border-default)',
+        borderTop: '1px solid var(--border-default)',
+        borderBottom: '1px solid var(--border-default)',
         backdropFilter: 'blur(16px)',
         boxShadow: 'var(--shadow-card)',
       }}
     >
       {/* Header + Period Selector */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 px-4 md:px-0">
         <div className="space-y-1">
           <h3
             className="text-lg font-black tracking-tight"
@@ -121,33 +124,36 @@ export default function HistoryChart({ data, period, onPeriodChange }: HistoryCh
           </p>
         </div>
 
-        {/* Period buttons */}
-        <div
-          className="flex items-center gap-1 p-1 rounded-xl"
-          style={{ background: 'var(--surface-raised)' }}
-        >
-          {PERIODS.map(({ value, label }) => (
-            <button
-              key={value}
-              onClick={() => onPeriodChange(value)}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-200"
-              style={{
-                background: period === value ? 'var(--surface-overlay)' : 'transparent',
-                color: period === value ? 'var(--text-primary)' : 'var(--text-muted)',
-                boxShadow: period === value ? '0 2px 8px rgba(0,0,0,0.2)' : 'none',
-              }}
-            >
-              {label}
-            </button>
-          ))}
+        {/* Period selector */}
+        <div className="relative">
+          <select
+            value={period}
+            onChange={(e) => onPeriodChange(e.target.value as TimePeriod)}
+            className="appearance-none w-full sm:w-48 pl-4 pr-10 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider cursor-pointer transition-all duration-200 outline-none"
+            style={{
+              background: 'var(--surface-raised)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border-default)',
+              boxShadow: 'var(--shadow-card)',
+            }}
+          >
+            {PERIODS.map(({ value, label }) => (
+              <option key={value} value={value} style={{ background: 'var(--surface-base)' }}>
+                {label}
+              </option>
+            ))}
+          </select>
+          <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+            <svg className="w-4 h-4" style={{ color: 'var(--text-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+          </div>
         </div>
       </div>
 
       {data.length === 0 ? (
-        <div className="relative w-full h-[280px] md:h-[340px] flex flex-col items-center justify-center rounded-2xl overflow-hidden mt-4" style={{ border: '1px dashed var(--border-hover)', background: 'var(--surface-raised)' }}>
+        <div className="mx-4 md:mx-0 relative w-auto h-[280px] md:h-[340px] flex flex-col items-center justify-center rounded-2xl overflow-hidden mt-4" style={{ border: '1px dashed var(--border-hover)', background: 'var(--surface-raised)' }}>
           <div className="absolute inset-0 opacity-[0.03] animate-shimmer pointer-events-none" />
           <div className="flex flex-col items-center gap-4 relative z-10 text-center animate-fade-in">
-            <div 
+            <div
               className="w-16 h-16 rounded-full flex items-center justify-center opacity-70 transition-transform hover:scale-105"
               style={{ background: 'var(--surface-overlay)', color: 'var(--text-muted)', border: '1px solid var(--border-default)' }}
             >
@@ -166,7 +172,7 @@ export default function HistoryChart({ data, period, onPeriodChange }: HistoryCh
       ) : (
         <>
           {/* Legend */}
-      <div className="flex gap-5 mb-4">
+      <div className="flex gap-5 mb-4 px-4 md:px-0">
         <div className="flex items-center gap-2">
           <div
             className="w-2.5 h-2.5 rounded-full"
@@ -188,7 +194,7 @@ export default function HistoryChart({ data, period, onPeriodChange }: HistoryCh
       </div>
 
       {/* Chart */}
-      <div className="w-full h-[280px] md:h-[340px] -ml-2 md:ml-0">
+      <div className="w-full h-[280px] md:h-[340px]  md:ml-0">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
@@ -270,6 +276,65 @@ export default function HistoryChart({ data, period, onPeriodChange }: HistoryCh
         </ResponsiveContainer>
       </div>
         </>
+      )}
+
+      {/* Analytics Summary */}
+      {data.length > 0 && (
+        <div className="px-4 md:px-0 pt-6 mt-4 border-t space-y-6" style={{ borderColor: 'var(--border-default)' }}>
+          {/* Temperature Section */}
+          <div className="space-y-3">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] px-4 md:px-0" style={{ color: 'var(--amber-500)' }}>
+              Estadísticas de Temperatura
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 px-4 md:px-0">
+              <div className="flex md:flex-col justify-between items-center md:items-start p-3 md:p-4 rounded-xl" style={{ background: 'var(--surface-raised)' }}>
+                <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground" style={{ color: 'var(--text-muted)' }}>Mínima</p>
+                <p className="text-lg md:text-2xl font-black tabular-nums" style={{ color: 'var(--text-primary)' }}>
+                  {Math.min(...data.map(d => d.temperatura)).toFixed(1)}°C
+                </p>
+              </div>
+              <div className="flex md:flex-col justify-between items-center md:items-start p-3 md:p-4 rounded-xl" style={{ background: 'var(--surface-raised)' }}>
+                <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground" style={{ color: 'var(--text-muted)' }}>Promedio</p>
+                <p className="text-lg md:text-2xl font-black tabular-nums" style={{ color: 'var(--text-primary)' }}>
+                  {(data.reduce((acc, d) => acc + d.temperatura, 0) / data.length).toFixed(1)}°C
+                </p>
+              </div>
+              <div className="flex md:flex-col justify-between items-center md:items-start p-3 md:p-4 rounded-xl" style={{ background: 'var(--surface-raised)' }}>
+                <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground" style={{ color: 'var(--text-muted)' }}>Máxima</p>
+                <p className="text-lg md:text-2xl font-black tabular-nums" style={{ color: 'var(--text-primary)' }}>
+                  {Math.max(...data.map(d => d.temperatura)).toFixed(1)}°C
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Humidity Section */}
+          <div className="space-y-3">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] px-4 md:px-0" style={{ color: 'var(--emerald-500)' }}>
+              Estadísticas de Humedad
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 px-4 md:px-0">
+              <div className="flex md:flex-col justify-between items-center md:items-start p-3 md:p-4 rounded-xl" style={{ background: 'var(--surface-raised)' }}>
+                <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground" style={{ color: 'var(--text-muted)' }}>Mínima</p>
+                <p className="text-lg md:text-2xl font-black tabular-nums" style={{ color: 'var(--text-primary)' }}>
+                  {Math.min(...data.map(d => d.humedad)).toFixed(0)}%
+                </p>
+              </div>
+              <div className="flex md:flex-col justify-between items-center md:items-start p-3 md:p-4 rounded-xl" style={{ background: 'var(--surface-raised)' }}>
+                <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground" style={{ color: 'var(--text-muted)' }}>Promedio</p>
+                <p className="text-lg md:text-2xl font-black tabular-nums" style={{ color: 'var(--text-primary)' }}>
+                  {(data.reduce((acc, d) => acc + d.humedad, 0) / data.length).toFixed(0)}%
+                </p>
+              </div>
+              <div className="flex md:flex-col justify-between items-center md:items-start p-3 md:p-4 rounded-xl" style={{ background: 'var(--surface-raised)' }}>
+                <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground" style={{ color: 'var(--text-muted)' }}>Máxima</p>
+                <p className="text-lg md:text-2xl font-black tabular-nums" style={{ color: 'var(--text-primary)' }}>
+                  {Math.max(...data.map(d => d.humedad)).toFixed(0)}%
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

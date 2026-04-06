@@ -2,13 +2,15 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { Reading } from '@/components/HistoryChart';
 
-export type TimePeriod = '1h' | '6h' | '24h' | '7d';
+export type TimePeriod = '1h' | '6h' | '24h' | '7d' | '15d' | '30d';
 
 const PERIOD_LIMITS: Record<TimePeriod, number> = {
   '1h': 60,
-  '6h': 60,
-  '24h': 120,
-  '7d': 200,
+  '6h': 120,
+  '24h': 200,
+  '7d': 400,
+  '15d': 600,
+  '30d': 1000,
 };
 
 function getPeriodDate(period: TimePeriod): string {
@@ -18,6 +20,8 @@ function getPeriodDate(period: TimePeriod): string {
     case '6h': now.setHours(now.getHours() - 6); break;
     case '24h': now.setHours(now.getHours() - 24); break;
     case '7d': now.setDate(now.getDate() - 7); break;
+    case '15d': now.setDate(now.getDate() - 15); break;
+    case '30d': now.setDate(now.getDate() - 30); break;
   }
   return now.toISOString();
 }
