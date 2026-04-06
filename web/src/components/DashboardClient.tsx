@@ -37,7 +37,7 @@ export default function DashboardClient() {
             className="text-4xl md:text-5xl font-black tracking-tighter"
             style={{ color: 'var(--text-primary)' }}
           >
-            Cloud<span style={{ color: 'var(--emerald-500)' }}>Monitor</span>
+            Dashboard <span style={{ color: 'var(--emerald-500)' }}>de Monitoreo</span>
           </h1>
           <p
             className="text-sm font-medium max-w-lg"
@@ -136,17 +136,6 @@ export default function DashboardClient() {
             className="text-xs leading-relaxed max-w-md"
             style={{ color: 'var(--text-muted)' }}
           >
-            Proyecto de{' '}
-            <a
-              href="https://redmakermisiones.com.ar/espaciosmaker"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold hover:underline transition-colors"
-              style={{ color: 'var(--emerald-400)' }}
-            >
-              Red Maker Misiones
-            </a>
-            {' '}— Sede General Urquiza.{' '}
             Hardware:{' '}
             <a
               href="https://faniot.com.ar/producto-kitmaker2-0"

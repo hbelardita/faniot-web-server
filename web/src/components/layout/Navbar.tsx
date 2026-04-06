@@ -35,7 +35,7 @@ export default function Navbar({ isOnline }: NavbarProps) {
             <Activity className="w-5 h-5" />
           </div>
           <span className="text-lg font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
-            Faniot<span style={{ color: 'var(--emerald-500)' }}>Cloud</span>
+            Monitor<span style={{ color: 'var(--emerald-500)' }}>IoT</span>
           </span>
         </Link>
 
